@@ -38,22 +38,32 @@ export default function AddPlantDetails({ plant, onAdded, onBack }) {
 
         <div className="add-details-info">
           <div className="add-details-info-item">
+            <span className="add-details-info-icon">💧</span>
             <span className="add-details-info-label">Полив</span>
             <span className="add-details-info-value">
               каждые {plant.watering_interval_days} дн.
             </span>
           </div>
+          {plant.category && (
+            <div className="add-details-info-item">
+              <span className="add-details-info-icon">🏷</span>
+              <span className="add-details-info-label">Категория</span>
+              <span className="add-details-info-value">{plant.category}</span>
+            </div>
+          )}
         </div>
 
         <div className="add-details-nickname">
-          <label>Имя (необязательно)</label>
+          <label>Дайте имя растению</label>
           <input
             type="text"
             placeholder="Например, Монти"
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
             maxLength={50}
+            autoComplete="off"
           />
+          <span className="add-details-nickname-hint">Необязательно — можно оставить пустым</span>
         </div>
 
         <div className="add-details-actions">

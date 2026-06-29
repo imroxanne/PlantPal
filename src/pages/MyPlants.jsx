@@ -11,7 +11,7 @@ function getPlantEmoji(name) {
 }
 
 function getWateringStatus(lastWatered, intervalDays) {
-  if (!lastWatered) return { color: 'var(--unknown)', text: 'Когда поливали?', key: 'unknown' }
+  if (!lastWatered) return { color: 'var(--unknown)', text: 'Нет даты полива', key: 'unknown' }
 
   const now = new Date()
   const last = new Date(lastWatered)
@@ -25,16 +25,16 @@ function getWateringStatus(lastWatered, intervalDays) {
     return { color: 'var(--water-blue)', text: 'Полить сегодня', key: 'today' }
   if (daysLeft === 1)
     return { color: 'var(--warning)', text: 'Полить завтра', key: 'soon' }
-  return { color: 'var(--success)', text: `Полить через ${daysLeft} дн.`, key: 'ok' }
+  return { color: 'var(--success)', text: `Через ${daysLeft} дн.`, key: 'ok' }
 }
 
 function SkeletonCards() {
   return (
-    <div className="loading-skeleton">
+    <div className="plant-list">
       {[0, 1, 2].map((i) => (
         <div key={i} className="skeleton-card">
           <div className="skeleton-avatar skel" />
-          <div style={{ flex: 1 }}>
+          <div className="skeleton-lines">
             <div className="skeleton-line skeleton-line-short skel" />
             <div className="skeleton-line skeleton-line-long skel" />
           </div>
@@ -57,33 +57,41 @@ export default function MyPlants({ onAdd }) {
       .finally(() => setLoading(false))
   }, [])
 
+  const count = userPlants?.length || 0
+
   return (
     <div className="my-plants">
       <div className="my-plants-header">
         <h1>Мои растения</h1>
+        {!loading && !error && count > 0 && (
+          <span className="my-plants-count">{count}</span>
+        )}
       </div>
 
       {loading && <SkeletonCards />}
 
       {error && (
         <div className="error-state">
+          <div className="error-state-icon">😔</div>
           <p>Не удалось загрузить данные</p>
-          <button onClick={() => window.location.reload()}>Обновить</button>
+          <button className="btn-primary" onClick={() => window.location.reload()}>
+            Попробовать снова
+          </button>
         </div>
       )}
 
-      {!loading && !error && userPlants?.length === 0 && (
+      {!loading && !error && count === 0 && (
         <div className="empty-state">
           <div className="empty-state-icon">🌱</div>
           <h2>Добавьте первое растение</h2>
-          <p>PlantPal возьмёт уход на себя</p>
+          <p>PlantPal поможет не забыть о поливе и уходе за вашими зелёными друзьями</p>
           <button className="btn-primary" onClick={onAdd}>
             Добавить растение
           </button>
         </div>
       )}
 
-      {!loading && !error && userPlants?.length > 0 && (
+      {!loading && !error && count > 0 && (
         <>
           <div className="plant-list">
             {userPlants.map((up) => {
@@ -91,17 +99,18 @@ export default function MyPlants({ onAdd }) {
               const status = getWateringStatus(up.last_watered, up.plant.watering_interval_days)
               return (
                 <div key={up.id} className="plant-card">
-                  <span className="plant-card-status" style={{ background: status.color }} />
                   <div className="plant-card-avatar">{getPlantEmoji(name)}</div>
                   <div className="plant-card-info">
                     <div className="plant-card-name">{name}</div>
-                    <div className="plant-card-status-text" style={{ color: status.color }}>
-                      {status.text}
-                    </div>
                     {up.nickname && (
                       <div className="plant-card-species">{up.plant.common_name}</div>
                     )}
+                    <div className="plant-card-watering" style={{ color: status.color }}>
+                      <span className="plant-card-dot" style={{ background: status.color }} />
+                      {status.text}
+                    </div>
                   </div>
+                  <span className="plant-card-status" style={{ background: status.color }} />
                 </div>
               )
             })}

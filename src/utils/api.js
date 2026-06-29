@@ -26,4 +26,12 @@ async function request(path, options = {}) {
 
 export const api = {
   home: () => request('/home'),
+  searchPlants: (q) => request('/plants?q=' + encodeURIComponent(q)),
+  getPlants: () => request('/plants'),
+  getUserPlants: () => request('/user-plants'),
+  addUserPlant: (plantId, nickname) =>
+    request('/user-plants', {
+      method: 'POST',
+      body: JSON.stringify({ plant_id: plantId, nickname: nickname || undefined }),
+    }),
 }

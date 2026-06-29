@@ -4,6 +4,11 @@ import { getSupabase } from './supabase.js'
 export function parseTelegramInitData(initData) {
   if (!initData) return null
 
+  const botToken = process.env.TELEGRAM_BOT_TOKEN?.trim()
+  if (!botToken) {
+    throw new Error('TELEGRAM_BOT_TOKEN is not configured')
+  }
+
   const params = new URLSearchParams(initData)
   const hash = params.get('hash')
   if (!hash) return null
@@ -13,7 +18,7 @@ export function parseTelegramInitData(initData) {
   const dataCheckString = entries.map(([k, v]) => `${k}=${v}`).join('\n')
 
   const secretKey = createHmac('sha256', 'WebAppData')
-    .update(process.env.TELEGRAM_BOT_TOKEN)
+    .update(botToken)
     .digest()
 
   const expectedHash = createHmac('sha256', secretKey)
@@ -34,11 +39,15 @@ export async function getOrCreateUser(telegramUser) {
   const sb = getSupabase()
   const tid = String(telegramUser.id)
 
-  const { data: existing } = await sb
+  const { data: existing, error: selectError } = await sb
     .from('users')
     .select('*')
     .eq('telegram_id', tid)
     .maybeSingle()
+
+  if (selectError) {
+    throw new Error(`Database error: ${selectError.message}`)
+  }
 
   if (existing) {
     await sb
@@ -48,7 +57,7 @@ export async function getOrCreateUser(telegramUser) {
     return existing
   }
 
-  const { data: created } = await sb
+  const { data: created, error: insertError } = await sb
     .from('users')
     .insert({
       telegram_id: tid,
@@ -58,13 +67,16 @@ export async function getOrCreateUser(telegramUser) {
     .select()
     .single()
 
+  if (insertError) {
+    throw new Error(`Database error: ${insertError.message}`)
+  }
+
   return created
 }
 
 export async function requireAuth(req) {
   const initData = req.headers['x-telegram-init-data']
 
-  // Dev mode: allow bypass in non-production
   if (process.env.NODE_ENV !== 'production' && req.headers['x-dev-telegram-id']) {
     const devId = req.headers['x-dev-telegram-id']
     const user = await getOrCreateUser({ id: devId, first_name: 'Dev User' })
@@ -72,8 +84,14 @@ export async function requireAuth(req) {
     return user
   }
 
+  if (!initData) {
+    throw new Error('Unauthorized')
+  }
+
   const telegramUser = parseTelegramInitData(initData)
-  if (!telegramUser) throw new Error('Unauthorized')
+  if (!telegramUser) {
+    throw new Error('Unauthorized')
+  }
 
   const user = await getOrCreateUser(telegramUser)
   if (!user) throw new Error('Failed to get or create user')

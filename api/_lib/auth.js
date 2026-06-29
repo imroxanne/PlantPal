@@ -4,6 +4,12 @@ import { getSupabase } from './supabase.js'
 export function parseTelegramInitData(initData) {
   if (!initData) return null
 
+  const botToken = process.env.TELEGRAM_BOT_TOKEN
+  if (!botToken) {
+    console.error('TELEGRAM_BOT_TOKEN is not set')
+    return null
+  }
+
   const params = new URLSearchParams(initData)
   const hash = params.get('hash')
   if (!hash) return null
@@ -13,7 +19,7 @@ export function parseTelegramInitData(initData) {
   const dataCheckString = entries.map(([k, v]) => `${k}=${v}`).join('\n')
 
   const secretKey = createHmac('sha256', 'WebAppData')
-    .update(process.env.TELEGRAM_BOT_TOKEN)
+    .update(botToken)
     .digest()
 
   const expectedHash = createHmac('sha256', secretKey)
@@ -64,7 +70,6 @@ export async function getOrCreateUser(telegramUser) {
 export async function requireAuth(req) {
   const initData = req.headers['x-telegram-init-data']
 
-  // Dev mode: allow bypass in non-production
   if (process.env.NODE_ENV !== 'production' && req.headers['x-dev-telegram-id']) {
     const devId = req.headers['x-dev-telegram-id']
     const user = await getOrCreateUser({ id: devId, first_name: 'Dev User' })
@@ -72,8 +77,16 @@ export async function requireAuth(req) {
     return user
   }
 
+  if (!initData) {
+    console.error('Auth failed: x-telegram-init-data header is empty')
+    throw new Error('Unauthorized')
+  }
+
   const telegramUser = parseTelegramInitData(initData)
-  if (!telegramUser) throw new Error('Unauthorized')
+  if (!telegramUser) {
+    console.error('Auth failed: initData validation failed (check TELEGRAM_BOT_TOKEN)')
+    throw new Error('Unauthorized')
+  }
 
   const user = await getOrCreateUser(telegramUser)
   if (!user) throw new Error('Failed to get or create user')

@@ -12,7 +12,9 @@ export default async function handler(req, res) {
       },
     })
   } catch (e) {
-    const status = e.message === 'Unauthorized' ? 401 : 500
+    const status = e.message === 'Unauthorized' ? 401
+      : e.message === 'Forbidden' ? 403
+      : 500
     res.status(status).json({ error: e.message })
   }
 }

@@ -4,10 +4,9 @@ import { getSupabase } from './supabase.js'
 export function parseTelegramInitData(initData) {
   if (!initData) return null
 
-  const botToken = process.env.TELEGRAM_BOT_TOKEN
+  const botToken = process.env.TELEGRAM_BOT_TOKEN?.trim()
   if (!botToken) {
-    console.error('TELEGRAM_BOT_TOKEN is not set')
-    return null
+    throw new Error('TELEGRAM_BOT_TOKEN is not configured')
   }
 
   const params = new URLSearchParams(initData)
@@ -40,11 +39,15 @@ export async function getOrCreateUser(telegramUser) {
   const sb = getSupabase()
   const tid = String(telegramUser.id)
 
-  const { data: existing } = await sb
+  const { data: existing, error: selectError } = await sb
     .from('users')
     .select('*')
     .eq('telegram_id', tid)
     .maybeSingle()
+
+  if (selectError) {
+    throw new Error(`Database error: ${selectError.message}`)
+  }
 
   if (existing) {
     await sb
@@ -54,7 +57,7 @@ export async function getOrCreateUser(telegramUser) {
     return existing
   }
 
-  const { data: created } = await sb
+  const { data: created, error: insertError } = await sb
     .from('users')
     .insert({
       telegram_id: tid,
@@ -63,6 +66,10 @@ export async function getOrCreateUser(telegramUser) {
     })
     .select()
     .single()
+
+  if (insertError) {
+    throw new Error(`Database error: ${insertError.message}`)
+  }
 
   return created
 }
@@ -78,13 +85,11 @@ export async function requireAuth(req) {
   }
 
   if (!initData) {
-    console.error('Auth failed: x-telegram-init-data header is empty')
     throw new Error('Unauthorized')
   }
 
   const telegramUser = parseTelegramInitData(initData)
   if (!telegramUser) {
-    console.error('Auth failed: initData validation failed (check TELEGRAM_BOT_TOKEN)')
     throw new Error('Unauthorized')
   }
 

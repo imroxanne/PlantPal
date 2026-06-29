@@ -12,9 +12,11 @@ export default async function handler(req, res) {
       },
     })
   } catch (e) {
-    const status = e.message === 'Unauthorized' ? 401
-      : e.message === 'Forbidden' ? 403
+    const msg = e.message
+    const status = msg === 'Unauthorized' ? 401
+      : msg === 'Forbidden' ? 403
       : 500
-    res.status(status).json({ error: e.message })
+    if (status === 500) console.error('/api/home error:', msg)
+    res.status(status).json({ error: msg })
   }
 }

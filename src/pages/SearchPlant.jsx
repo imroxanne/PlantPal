@@ -8,6 +8,7 @@ export default function SearchPlant({ onSelect, onBack }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(false)
   const inputRef = useRef(null)
   const timerRef = useRef(null)
 
@@ -22,24 +23,25 @@ export default function SearchPlant({ onSelect, onBack }) {
     if (q.length < 2) {
       setResults(null)
       setLoading(false)
+      setError(false)
       return
     }
 
     setLoading(true)
+    setError(false)
     timerRef.current = setTimeout(() => {
       api
         .searchPlants(q)
         .then((data) => setResults(data.plants))
-        .catch(() => setResults([]))
+        .catch(() => {
+          setResults([])
+          setError(true)
+        })
         .finally(() => setLoading(false))
     }, 300)
 
     return () => clearTimeout(timerRef.current)
   }, [query])
-
-  const handleChip = (name) => {
-    setQuery(name)
-  }
 
   return (
     <div className="search-plant">
@@ -56,9 +58,11 @@ export default function SearchPlant({ onSelect, onBack }) {
             placeholder="Название растения..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            autoComplete="off"
+            autoCorrect="off"
           />
           {query && (
-            <button className="search-clear" onClick={() => setQuery('')}>
+            <button className="search-clear" onClick={() => setQuery('')} aria-label="Очистить">
               ✕
             </button>
           )}
@@ -75,7 +79,7 @@ export default function SearchPlant({ onSelect, onBack }) {
             <div className="search-popular-label">Популярные</div>
             <div className="search-chips">
               {POPULAR.map((name) => (
-                <button key={name} className="search-chip" onClick={() => handleChip(name)}>
+                <button key={name} className="search-chip" onClick={() => setQuery(name)}>
                   {name}
                 </button>
               ))}
@@ -95,13 +99,28 @@ export default function SearchPlant({ onSelect, onBack }) {
                 {plant.latin_name && (
                   <div className="search-result-latin">{plant.latin_name}</div>
                 )}
+                <div className="search-result-meta">
+                  Полив: каждые {plant.watering_interval_days} дн.
+                </div>
               </div>
             ))}
           </div>
         )}
 
-        {results && results.length === 0 && !loading && (
-          <div className="search-no-results">Ничего не найдено</div>
+        {results && results.length === 0 && !loading && !error && (
+          <div className="search-empty">
+            <div className="search-empty-icon">🔍</div>
+            <p>Ничего не найдено</p>
+            <span>Попробуйте другое название</span>
+          </div>
+        )}
+
+        {error && !loading && (
+          <div className="search-empty">
+            <div className="search-empty-icon">😔</div>
+            <p>Ошибка загрузки</p>
+            <span>Проверьте соединение и попробуйте снова</span>
+          </div>
         )}
       </div>
     </div>

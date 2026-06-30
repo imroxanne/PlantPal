@@ -1,63 +1,21 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '../utils/api'
+import { getPlantEmoji, getWateringStatus, formatDate, formatEventDate, EVENT_LABELS, EVENT_ICONS } from '../utils/status'
 import './PlantDetail.css'
 
-const PLANT_EMOJI = ['🪴', '🌿', '🌱', '🌵', '🌸', '🍀']
-
-function getPlantEmoji(name) {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) hash = ((hash << 5) - hash + name.charCodeAt(i)) | 0
-  return PLANT_EMOJI[Math.abs(hash) % PLANT_EMOJI.length]
-}
-
-function formatDate(iso) {
-  if (!iso) return null
-  const d = new Date(iso)
-  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
-}
-
-function getWateringStatus(lastWatered, intervalDays) {
-  if (!lastWatered) return { color: 'var(--unknown)', text: 'Нет даты полива', key: 'unknown' }
-  const now = new Date()
-  const last = new Date(lastWatered)
-  const diffDays = Math.floor((now - last) / (1000 * 60 * 60 * 24))
-  const daysLeft = intervalDays - diffDays
-  if (daysLeft < 0)
-    return { color: 'var(--danger)', text: `Просрочен на ${Math.abs(daysLeft)} дн.`, key: 'overdue' }
-  if (daysLeft === 0)
-    return { color: 'var(--water-blue)', text: 'Полить сегодня', key: 'today' }
-  if (daysLeft === 1)
-    return { color: 'var(--warning)', text: 'Полить завтра', key: 'soon' }
-  return { color: 'var(--success)', text: `Через ${daysLeft} дн.`, key: 'ok' }
-}
-
-function formatEventDate(iso) {
-  const d = new Date(iso)
-  const now = new Date()
-  const diffMs = now - d
-  const diffMin = Math.floor(diffMs / 60000)
-  if (diffMin < 1) return 'Только что'
-  if (diffMin < 60) return `${diffMin} мин. назад`
-  const diffHours = Math.floor(diffMin / 60)
-  if (diffHours < 24) return `${diffHours} ч. назад`
-  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
-}
-
-const EVENT_LABELS = { watering: 'Полив' }
-const EVENT_ICONS = { watering: '💧' }
-
-export default function PlantDetail({ userPlantId, onBack }) {
+export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToast }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [watering, setWatering] = useState(false)
-  const [toast, setToast] = useState(null)
+  const [acting, setActing] = useState(null)
+  const [showMore, setShowMore] = useState(false)
+  const [noteText, setNoteText] = useState('')
+  const [showNoteInput, setShowNoteInput] = useState(false)
 
   const load = useCallback(() => {
     setLoading(true)
     setError(null)
-    api
-      .getUserPlant(userPlantId)
+    api.getUserPlant(userPlantId)
       .then((d) => setData(d))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
@@ -65,18 +23,39 @@ export default function PlantDetail({ userPlantId, onBack }) {
 
   useEffect(() => { load() }, [load])
 
-  const handleWater = async () => {
-    setWatering(true)
+  const handleAction = async (type) => {
+    if (type === 'note') {
+      setShowNoteInput(true)
+      setShowMore(false)
+      return
+    }
+    setActing(type)
+    setShowMore(false)
     try {
-      const d = await api.waterPlant(userPlantId)
+      const d = await api.createEvent(userPlantId, type)
       setData(d)
-      setToast('Полив отмечен!')
-      setTimeout(() => setToast(null), 2500)
+      const labels = { watering: 'Полив отмечен!', fertilizing: 'Подкормка отмечена!', repotting: 'Пересадка отмечена!', check: 'Проверка отмечена!' }
+      onShowToast?.(labels[type] || 'Отмечено!')
     } catch (e) {
-      setToast('Ошибка: ' + e.message)
-      setTimeout(() => setToast(null), 3000)
+      onShowToast?.('Ошибка: ' + e.message, 'error')
     } finally {
-      setWatering(false)
+      setActing(null)
+    }
+  }
+
+  const handleNote = async () => {
+    if (!noteText.trim()) return
+    setActing('note')
+    try {
+      const d = await api.createEvent(userPlantId, 'note', noteText.trim())
+      setData(d)
+      setNoteText('')
+      setShowNoteInput(false)
+      onShowToast?.('Заметка добавлена!')
+    } catch (e) {
+      onShowToast?.('Ошибка: ' + e.message, 'error')
+    } finally {
+      setActing(null)
     }
   }
 
@@ -127,6 +106,9 @@ export default function PlantDetail({ userPlantId, onBack }) {
     <div className="plant-detail">
       <div className="pd-header">
         <h1>{name}</h1>
+        <button className="pd-settings-btn" onClick={() => onSettings(up)}>
+          ⚙
+        </button>
       </div>
 
       <div className="pd-body">
@@ -164,16 +146,79 @@ export default function PlantDetail({ userPlantId, onBack }) {
           </div>
         </div>
 
-        <div className="pd-water-action">
+        <div className="pd-quick-actions">
           <button
-            className="btn-water"
-            onClick={handleWater}
-            disabled={watering}
+            className="pd-action-btn pd-action-water"
+            onClick={() => handleAction('watering')}
+            disabled={acting === 'watering'}
           >
-            <span className="btn-water-icon">💧</span>
-            {watering ? 'Сохраняю...' : 'Полил'}
+            <span className="pd-action-icon">💧</span>
+            <span>{acting === 'watering' ? '...' : 'Полил'}</span>
+          </button>
+          <button
+            className="pd-action-btn"
+            onClick={() => handleAction('fertilizing')}
+            disabled={acting === 'fertilizing'}
+          >
+            <span className="pd-action-icon">🧪</span>
+            <span>{acting === 'fertilizing' ? '...' : 'Подкормил'}</span>
+          </button>
+          <button
+            className="pd-action-btn"
+            onClick={() => handleAction('repotting')}
+            disabled={acting === 'repotting'}
+          >
+            <span className="pd-action-icon">🪴</span>
+            <span>{acting === 'repotting' ? '...' : 'Пересадил'}</span>
+          </button>
+          <button
+            className="pd-action-btn"
+            onClick={() => setShowMore(!showMore)}
+          >
+            <span className="pd-action-icon">...</span>
+            <span>Ещё</span>
           </button>
         </div>
+
+        {showMore && (
+          <div className="pd-more-menu">
+            <button className="pd-more-item" onClick={() => handleAction('check')}>
+              <span>🔍</span> Проверил растение
+            </button>
+            <button className="pd-more-item" onClick={() => handleAction('note')}>
+              <span>📝</span> Заметка
+            </button>
+          </div>
+        )}
+
+        {showNoteInput && (
+          <div className="pd-note-input">
+            <textarea
+              className="pd-note-textarea"
+              value={noteText}
+              onChange={(e) => setNoteText(e.target.value)}
+              placeholder="Текст заметки..."
+              rows={3}
+              maxLength={500}
+              autoFocus
+            />
+            <div className="pd-note-actions">
+              <button
+                className="btn-primary pd-note-save"
+                onClick={handleNote}
+                disabled={!noteText.trim() || acting === 'note'}
+              >
+                {acting === 'note' ? 'Сохраняю...' : 'Сохранить'}
+              </button>
+              <button
+                className="pd-note-cancel"
+                onClick={() => { setShowNoteInput(false); setNoteText('') }}
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        )}
 
         {careInfo.length > 0 && (
           <div className="pd-care-section">
@@ -206,6 +251,7 @@ export default function PlantDetail({ userPlantId, onBack }) {
                   <span className="pd-history-icon">{EVENT_ICONS[ev.type] || '📋'}</span>
                   <div className="pd-history-info">
                     <span className="pd-history-type">{EVENT_LABELS[ev.type] || ev.type}</span>
+                    {ev.note && <span className="pd-history-note">{ev.note}</span>}
                     <span className="pd-history-date">{formatEventDate(ev.created_at)}</span>
                   </div>
                 </div>
@@ -214,12 +260,6 @@ export default function PlantDetail({ userPlantId, onBack }) {
           )}
         </div>
       </div>
-
-      {toast && (
-        <div className={`pd-toast ${toast.startsWith('Ошибка') ? 'pd-toast-error' : ''}`}>
-          {toast}
-        </div>
-      )}
     </div>
   )
 }

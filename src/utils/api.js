@@ -36,4 +36,18 @@ export const api = {
     }),
   getUserPlant: (id) => request('/user-plants/' + id),
   waterPlant: (id) => request('/user-plants/' + id + '/water', { method: 'POST' }),
+  updateUserPlant: (id, fields) =>
+    request('/user-plants/' + id, {
+      method: 'PATCH',
+      body: JSON.stringify(fields),
+    }),
+  archivePlant: (id) =>
+    request('/user-plants/' + id + '/archive', { method: 'POST' }),
+  createEvent: (id, type, note) =>
+    request('/user-plants/' + id + '/events', {
+      method: 'POST',
+      body: JSON.stringify({ type, note: note || undefined }),
+    }),
+  getTasks: () => request('/tasks'),
+  getCareEvents: () => request('/care-events'),
 }

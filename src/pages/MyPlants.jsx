@@ -1,32 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
+import { getPlantEmoji, getWateringStatus } from '../utils/status'
 import './MyPlants.css'
-
-const PLANT_EMOJI = ['🪴', '🌿', '🌱', '🌵', '🌸', '🍀']
-
-function getPlantEmoji(name) {
-  let hash = 0
-  for (let i = 0; i < name.length; i++) hash = ((hash << 5) - hash + name.charCodeAt(i)) | 0
-  return PLANT_EMOJI[Math.abs(hash) % PLANT_EMOJI.length]
-}
-
-function getWateringStatus(lastWatered, intervalDays) {
-  if (!lastWatered) return { color: 'var(--unknown)', text: 'Нет даты полива', key: 'unknown' }
-
-  const now = new Date()
-  const last = new Date(lastWatered)
-  const diffMs = now - last
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-  const daysLeft = intervalDays - diffDays
-
-  if (daysLeft < 0)
-    return { color: 'var(--danger)', text: `Просрочен на ${Math.abs(daysLeft)} дн.`, key: 'overdue' }
-  if (daysLeft === 0)
-    return { color: 'var(--water-blue)', text: 'Полить сегодня', key: 'today' }
-  if (daysLeft === 1)
-    return { color: 'var(--warning)', text: 'Полить завтра', key: 'soon' }
-  return { color: 'var(--success)', text: `Через ${daysLeft} дн.`, key: 'ok' }
-}
 
 function SkeletonCards() {
   return (
@@ -44,10 +19,11 @@ function SkeletonCards() {
   )
 }
 
-export default function MyPlants({ onAdd, onPlantTap }) {
+export default function MyPlants({ onAdd, onPlantTap, onShowToast }) {
   const [userPlants, setUserPlants] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [wateringId, setWateringId] = useState(null)
 
   useEffect(() => {
     api
@@ -56,6 +32,26 @@ export default function MyPlants({ onAdd, onPlantTap }) {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }, [])
+
+  const handleQuickWater = async (e, plantId) => {
+    e.stopPropagation()
+    setWateringId(plantId)
+    try {
+      const res = await api.waterPlant(plantId)
+      setUserPlants((prev) =>
+        prev.map((p) =>
+          p.id === plantId
+            ? { ...p, last_watered: res.user_plant.last_watered, next_watering_at: res.user_plant.next_watering_at }
+            : p
+        )
+      )
+      onShowToast?.('Полив отмечен!')
+    } catch (err) {
+      onShowToast?.('Ошибка: ' + err.message, 'error')
+    } finally {
+      setWateringId(null)
+    }
+  }
 
   const count = userPlants?.length || 0
 
@@ -92,35 +88,43 @@ export default function MyPlants({ onAdd, onPlantTap }) {
       )}
 
       {!loading && !error && count > 0 && (
-        <>
-          <div className="plant-list">
-            {userPlants.map((up) => {
-              const name = up.nickname || up.plant.common_name
-              const status = getWateringStatus(up.last_watered, up.plant.watering_interval_days)
-              return (
-                <div key={up.id} className="plant-card" onClick={() => onPlantTap(up.id)}>
-                  <div className="plant-card-avatar">{getPlantEmoji(name)}</div>
-                  <div className="plant-card-info">
-                    <div className="plant-card-name">{name}</div>
-                    {up.nickname && (
-                      <div className="plant-card-species">{up.plant.common_name}</div>
-                    )}
-                    <div className="plant-card-watering" style={{ color: status.color }}>
-                      <span className="plant-card-dot" style={{ background: status.color }} />
-                      {status.text}
-                    </div>
+        <div className="plant-list">
+          {userPlants.map((up) => {
+            const name = up.nickname || up.plant.common_name
+            const status = getWateringStatus(up.last_watered, up.plant.watering_interval_days)
+            const showWaterBtn = status.key === 'today' || status.key === 'overdue'
+            return (
+              <div
+                key={up.id}
+                className={`plant-card ${status.key === 'overdue' ? 'plant-card-overdue' : ''}`}
+                onClick={() => onPlantTap(up.id)}
+              >
+                <div className="plant-card-avatar">{getPlantEmoji(name)}</div>
+                <div className="plant-card-info">
+                  <div className="plant-card-name">{name}</div>
+                  {up.nickname && (
+                    <div className="plant-card-species">{up.plant.common_name}</div>
+                  )}
+                  <div className="plant-card-watering" style={{ color: status.color }}>
+                    <span className="plant-card-dot" style={{ background: status.color }} />
+                    {status.text}
                   </div>
-                  <span className="plant-card-status" style={{ background: status.color }} />
                 </div>
-              )
-            })}
-          </div>
-          <div className="my-plants-footer">
-            <button className="btn-primary" onClick={onAdd}>
-              Добавить растение
-            </button>
-          </div>
-        </>
+                {showWaterBtn ? (
+                  <button
+                    className="plant-card-water-btn"
+                    onClick={(e) => handleQuickWater(e, up.id)}
+                    disabled={wateringId === up.id}
+                  >
+                    {wateringId === up.id ? '...' : '💧'}
+                  </button>
+                ) : (
+                  <span className="plant-card-status" style={{ background: status.color }} />
+                )}
+              </div>
+            )
+          })}
+        </div>
       )}
     </div>
   )

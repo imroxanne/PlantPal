@@ -3,7 +3,7 @@ import { getSupabase } from '../_lib/supabase.js'
 
 const PLANT_SELECT = `
   id, user_id, nickname, last_watered, next_watering_at, notes, location,
-  custom_watering_interval_days, created_at,
+  custom_watering_interval_days, photo_url, created_at,
   plant:plants(id, common_name, latin_name, category, description,
     watering_interval_days, light, humidity, temperature, soil,
     fertilizing, toxicity, image_url)
@@ -50,7 +50,7 @@ export default async function handler(req, res) {
     if (req.method === 'PATCH') {
       const { data: existing, error: fetchErr } = await sb
         .from('user_plants')
-        .select('id, user_id')
+        .select('id, user_id, last_watered, custom_watering_interval_days, plant:plants(watering_interval_days)')
         .eq('id', id)
         .eq('is_archived', false)
         .maybeSingle()
@@ -80,6 +80,14 @@ export default async function handler(req, res) {
       if (Object.keys(updates).length === 0) {
         res.status(400).json({ error: 'No fields to update' })
         return
+      }
+
+      if (updates.custom_watering_interval_days !== undefined && existing.last_watered) {
+        const newInterval = updates.custom_watering_interval_days || existing.plant?.watering_interval_days
+        if (newInterval) {
+          const lastWatered = new Date(existing.last_watered)
+          updates.next_watering_at = new Date(lastWatered.getTime() + newInterval * 86400000).toISOString()
+        }
       }
 
       const { error: updateErr } = await sb

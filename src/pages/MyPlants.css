@@ -1,6 +1,7 @@
 .my-plants {
   min-height: 100vh;
   background: var(--bg);
+  padding-bottom: calc(80px + var(--safe-bottom));
 }
 
 .my-plants-header {
@@ -56,22 +57,26 @@
   box-shadow: var(--shadow-e2);
 }
 
+.plant-card-overdue {
+  outline: 1.5px solid #F0D5D1;
+}
+
 .plant-card-avatar {
-  width: 72px;
-  height: 72px;
+  width: 64px;
+  height: 64px;
   border-radius: var(--radius-md);
   background: var(--primary-light);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
+  font-size: 28px;
   flex-shrink: 0;
 }
 
 .plant-card-info {
   flex: 1;
   min-width: 0;
-  padding-right: 16px;
+  padding-right: 8px;
 }
 
 .plant-card-name {
@@ -110,18 +115,36 @@
 }
 
 .plant-card-status {
-  position: absolute;
-  top: 16px;
-  right: 16px;
   width: 10px;
   height: 10px;
   border-radius: 50%;
+  flex-shrink: 0;
 }
 
-/* Footer */
+.plant-card-water-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #E5EEF2;
+  border: none;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 100ms ease-out;
+  -webkit-tap-highlight-color: transparent;
+}
 
-.my-plants-footer {
-  padding: 8px 20px 28px;
+.plant-card-water-btn:active {
+  transform: scale(0.9);
+  background: var(--water-blue);
+}
+
+.plant-card-water-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Empty state */
@@ -180,8 +203,8 @@
 }
 
 .skeleton-avatar {
-  width: 72px;
-  height: 72px;
+  width: 64px;
+  height: 64px;
   border-radius: var(--radius-md);
   flex-shrink: 0;
 }

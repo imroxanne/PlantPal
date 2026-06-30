@@ -13,7 +13,7 @@ export default async function handler(req, res) {
 
     const { data, error } = await sb
       .from('user_plants')
-      .select('id, nickname, last_watered, next_watering_at, plant:plants(id, common_name, latin_name, watering_interval_days)')
+      .select('id, nickname, last_watered, next_watering_at, plant:plants(id, common_name, latin_name, watering_interval_days, image_url)')
       .eq('user_id', user.id)
       .eq('is_archived', false)
       .not('next_watering_at', 'is', null)

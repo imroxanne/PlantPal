@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '../utils/api'
-import { getPlantEmoji, getWateringStatus, formatDate, formatEventDate, EVENT_LABELS, EVENT_ICONS } from '../utils/status'
+import { getWateringStatus, formatDate, formatEventDate, EVENT_LABELS, EVENT_ICONS } from '../utils/status'
+import PlantAvatar from '../components/PlantAvatar'
 import './PlantDetail.css'
 
 export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToast }) {
@@ -91,10 +92,13 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
   const plant = up.plant
   const events = data.care_events || []
   const name = up.nickname || plant.common_name
-  const status = getWateringStatus(up.last_watered, plant.watering_interval_days)
+  const effectiveInterval = up.custom_watering_interval_days || plant.watering_interval_days
+  const status = getWateringStatus(up.last_watered, effectiveInterval)
 
   const careInfo = [
-    { icon: '💧', label: 'Полив', value: `каждые ${plant.watering_interval_days} дн.` },
+    { icon: '💧', label: 'Полив', value: up.custom_watering_interval_days
+        ? `каждые ${up.custom_watering_interval_days} дн. (свой)`
+        : `каждые ${plant.watering_interval_days} дн.` },
     plant.light && { icon: '☀️', label: 'Свет', value: plant.light },
     plant.humidity && { icon: '💨', label: 'Влажность', value: plant.humidity },
     plant.temperature && { icon: '🌡', label: 'Температура', value: plant.temperature },
@@ -113,7 +117,7 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
 
       <div className="pd-body">
         <div className="pd-hero">
-          <div className="pd-avatar">{getPlantEmoji(name)}</div>
+          <PlantAvatar name={name} imageUrl={plant.image_url} photoUrl={up.photo_url} size={96} />
           <div className="pd-name">{name}</div>
           {plant.latin_name && <div className="pd-latin">{plant.latin_name}</div>}
           {up.nickname && <div className="pd-species">{plant.common_name}</div>}

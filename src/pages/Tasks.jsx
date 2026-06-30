@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
-import { getPlantEmoji } from '../utils/status'
+import PlantAvatar from '../components/PlantAvatar'
 import './Tasks.css'
 
 const GROUP_META = {
@@ -114,7 +114,7 @@ export default function Tasks({ onPlantTap, onShowToast }) {
                         className={`task-card ${groupKey === 'overdue' ? 'task-card-overdue' : ''}`}
                         onClick={() => onPlantTap(up.id)}
                       >
-                        <div className="task-card-avatar">{getPlantEmoji(name)}</div>
+                        <PlantAvatar name={name} imageUrl={up.plant.image_url} size={40} />
                         <div className="task-card-info">
                           <div className="task-card-name">{name}</div>
                           <div className="task-card-species">{up.plant.common_name}</div>

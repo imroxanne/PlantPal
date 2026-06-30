@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { initTelegram, getTelegramWebApp } from './utils/telegram'
+import { api } from './utils/api'
 import BottomNav from './components/BottomNav'
 import Toast from './components/Toast'
 import MyPlants from './pages/MyPlants'
@@ -20,6 +21,12 @@ export default function App() {
 
   useEffect(() => {
     initTelegram()
+    api.getTasks()
+      .then((d) => {
+        const total = Object.values(d.tasks).reduce((s, g) => s + g.length, 0)
+        setTaskCount(total)
+      })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {

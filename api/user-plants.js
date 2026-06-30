@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const { data, error } = await sb
         .from('user_plants')
-        .select('id, nickname, last_watered, created_at, plant:plants(id, common_name, latin_name, watering_interval_days)')
+        .select('id, nickname, last_watered, custom_watering_interval_days, photo_url, created_at, plant:plants(id, common_name, latin_name, watering_interval_days, image_url)')
         .eq('user_id', user.id)
         .eq('is_archived', false)
         .order('created_at', { ascending: false })
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
           plant_id,
           nickname: nickname?.trim() || null,
         })
-        .select('id, nickname, created_at, plant:plants(id, common_name, latin_name, watering_interval_days)')
+        .select('id, nickname, photo_url, created_at, plant:plants(id, common_name, latin_name, watering_interval_days, image_url)')
         .single()
 
       if (insertErr) throw new Error(`Database error: ${insertErr.message}`)

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
-import { getPlantEmoji, getWateringStatus } from '../utils/status'
+import { getWateringStatus } from '../utils/status'
+import PlantAvatar from '../components/PlantAvatar'
 import './MyPlants.css'
 
 function SkeletonCards() {
@@ -91,7 +92,8 @@ export default function MyPlants({ onAdd, onPlantTap, onShowToast }) {
         <div className="plant-list">
           {userPlants.map((up) => {
             const name = up.nickname || up.plant.common_name
-            const status = getWateringStatus(up.last_watered, up.plant.watering_interval_days)
+            const effectiveInterval = up.custom_watering_interval_days || up.plant.watering_interval_days
+            const status = getWateringStatus(up.last_watered, effectiveInterval)
             const showWaterBtn = status.key === 'today' || status.key === 'overdue'
             return (
               <div
@@ -99,7 +101,7 @@ export default function MyPlants({ onAdd, onPlantTap, onShowToast }) {
                 className={`plant-card ${status.key === 'overdue' ? 'plant-card-overdue' : ''}`}
                 onClick={() => onPlantTap(up.id)}
               >
-                <div className="plant-card-avatar">{getPlantEmoji(name)}</div>
+                <PlantAvatar name={name} imageUrl={up.plant.image_url} photoUrl={up.photo_url} size={64} />
                 <div className="plant-card-info">
                   <div className="plant-card-name">{name}</div>
                   {up.nickname && (

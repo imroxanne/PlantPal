@@ -52,15 +52,9 @@
   animation: fadeUp 300ms ease-out;
 }
 
-.pd-avatar {
-  width: 96px;
-  height: 96px;
+.pd-hero .plant-avatar,
+.pd-hero .plant-avatar-fallback {
   border-radius: 50%;
-  background: var(--primary-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 44px;
 }
 
 .pd-name {

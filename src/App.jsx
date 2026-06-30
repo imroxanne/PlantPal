@@ -3,6 +3,7 @@ import { initTelegram, getTelegramWebApp } from './utils/telegram'
 import MyPlants from './pages/MyPlants'
 import SearchPlant from './pages/SearchPlant'
 import AddPlantDetails from './pages/AddPlantDetails'
+import PlantDetail from './pages/PlantDetail'
 
 export default function App() {
   const [screen, setScreen] = useState('my-plants')
@@ -64,10 +65,23 @@ export default function App() {
     )
   }
 
+  if (screen === 'plant-detail') {
+    return (
+      <PlantDetail
+        userPlantId={screenData?.userPlantId}
+        onBack={() => {
+          setRefreshKey((k) => k + 1)
+          navigate('my-plants')
+        }}
+      />
+    )
+  }
+
   return (
     <MyPlants
       key={refreshKey}
       onAdd={() => navigate('search')}
+      onPlantTap={(userPlantId) => navigate('plant-detail', { userPlantId })}
     />
   )
 }

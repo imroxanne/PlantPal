@@ -34,4 +34,6 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ plant_id: plantId, nickname: nickname || undefined }),
     }),
+  getUserPlant: (id) => request('/user-plants/' + id),
+  waterPlant: (id) => request('/user-plants/' + id + '/water', { method: 'POST' }),
 }

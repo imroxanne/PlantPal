@@ -44,7 +44,7 @@ function SkeletonCards() {
   )
 }
 
-export default function MyPlants({ onAdd }) {
+export default function MyPlants({ onAdd, onPlantTap }) {
   const [userPlants, setUserPlants] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -98,7 +98,7 @@ export default function MyPlants({ onAdd }) {
               const name = up.nickname || up.plant.common_name
               const status = getWateringStatus(up.last_watered, up.plant.watering_interval_days)
               return (
-                <div key={up.id} className="plant-card">
+                <div key={up.id} className="plant-card" onClick={() => onPlantTap(up.id)}>
                   <div className="plant-card-avatar">{getPlantEmoji(name)}</div>
                   <div className="plant-card-info">
                     <div className="plant-card-name">{name}</div>

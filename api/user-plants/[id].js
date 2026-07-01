@@ -12,11 +12,18 @@ const PLANT_SELECT = `
     fertilizing, toxicity, image_url)
 `
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 export default async function handler(req, res) {
   try {
     const user = await requireAuth(req)
     const sb = getSupabase()
     const { id } = req.query
+
+    if (!id || !UUID_RE.test(id)) {
+      res.status(400).json({ error: 'Invalid plant id' })
+      return
+    }
 
     if (req.method === 'GET') {
       const { data: userPlant, error } = await sb

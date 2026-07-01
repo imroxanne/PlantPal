@@ -12,6 +12,12 @@ export default async function handler(req, res) {
     const user = await requireAuth(req)
     const sb = getSupabase()
     const { id } = req.query
+
+    if (!id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+      res.status(400).json({ error: 'Invalid plant id' })
+      return
+    }
+
     const { type, note } = req.body || {}
 
     const validTypes = ['watering', 'fertilizing', 'repotting', 'check', 'note']

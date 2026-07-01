@@ -57,6 +57,40 @@
   border-radius: 50%;
 }
 
+/* Photo actions */
+
+.pd-photo-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.pd-photo-btn {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--primary);
+  cursor: pointer;
+  font-family: inherit;
+  padding: 4px 8px;
+  min-height: 32px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pd-photo-btn:active {
+  opacity: 0.6;
+}
+
+.pd-photo-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pd-photo-btn-delete {
+  color: var(--text-tertiary);
+}
+
 .pd-name {
   font-size: 22px;
   font-weight: 700;

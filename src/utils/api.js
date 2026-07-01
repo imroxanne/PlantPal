@@ -69,6 +69,31 @@ export const api = {
       method: 'DELETE',
       body: JSON.stringify({ period }),
     }),
+  uploadPlantPhoto: (id, file) => {
+    return new Promise((resolve, reject) => {
+      if (file.size > 3 * 1024 * 1024) {
+        reject(new Error('Файл слишком большой. Максимум 3 МБ.'))
+        return
+      }
+      const allowed = ['image/jpeg', 'image/png', 'image/webp']
+      if (!allowed.includes(file.type)) {
+        reject(new Error('Можно загрузить только изображение (JPEG, PNG, WebP)'))
+        return
+      }
+      const reader = new FileReader()
+      reader.onload = () => {
+        const base64 = reader.result.split(',')[1]
+        request('/user-plant-photo', {
+          method: 'POST',
+          body: JSON.stringify({ id, photo: base64, content_type: file.type }),
+        }).then(resolve).catch(reject)
+      }
+      reader.onerror = () => reject(new Error('Не удалось прочитать файл'))
+      reader.readAsDataURL(file)
+    })
+  },
+  deletePlantPhoto: (id) =>
+    request('/user-plant-photo?id=' + id, { method: 'DELETE' }),
   getSettings: () => request('/settings'),
   updateSettings: (fields) =>
     request('/settings', {

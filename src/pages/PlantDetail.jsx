@@ -3,6 +3,7 @@ import { api } from '../utils/api'
 import { isTelegramEnv, hapticSuccess, hapticError } from '../utils/telegram'
 import { getWateringStatus, formatWateringInterval, formatNextWatering, formatDate, formatEventDate, EVENT_LABELS, EVENT_ICONS } from '../utils/status'
 import PlantAvatar from '../components/PlantAvatar'
+import ConfirmDialog from '../components/ConfirmDialog'
 import './PlantDetail.css'
 
 export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToast, onTaskCountChange, onViewHistory }) {
@@ -13,6 +14,9 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
   const [showMore, setShowMore] = useState(false)
   const [noteText, setNoteText] = useState('')
   const [showNoteInput, setShowNoteInput] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [showDeletePhoto, setShowDeletePhoto] = useState(false)
+  const fileInputRef = useRef(null)
   const moreMenuRef = useRef(null)
 
   useEffect(() => {
@@ -78,6 +82,46 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
     }
   }
 
+  const handleFileSelect = async (e) => {
+    const file = e.target.files?.[0]
+    if (fileInputRef.current) fileInputRef.current.value = ''
+    if (!file) return
+    setUploading(true)
+    try {
+      const res = await api.uploadPlantPhoto(userPlantId, file)
+      setData((prev) => ({
+        ...prev,
+        user_plant: { ...prev.user_plant, photo_url: res.photo_url },
+      }))
+      hapticSuccess()
+      onShowToast?.('Фото обновлено')
+    } catch (err) {
+      hapticError()
+      onShowToast?.('Ошибка: ' + err.message, 'error')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const handleDeletePhoto = async () => {
+    setShowDeletePhoto(false)
+    setUploading(true)
+    try {
+      await api.deletePlantPhoto(userPlantId)
+      setData((prev) => ({
+        ...prev,
+        user_plant: { ...prev.user_plant, photo_url: null },
+      }))
+      hapticSuccess()
+      onShowToast?.('Фото удалено')
+    } catch (err) {
+      hapticError()
+      onShowToast?.('Ошибка: ' + err.message, 'error')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="plant-detail">
@@ -137,6 +181,29 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
       <div className="pd-body">
         <div className="pd-hero">
           <PlantAvatar name={name} imageUrl={plant.image_url} photoUrl={up.photo_url} size={96} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            style={{ display: 'none' }}
+            onChange={handleFileSelect}
+          />
+          <div className="pd-photo-actions">
+            {up.photo_url ? (
+              <>
+                <button className="pd-photo-btn" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                  {uploading ? 'Загрузка...' : 'Изменить фото'}
+                </button>
+                <button className="pd-photo-btn pd-photo-btn-delete" onClick={() => setShowDeletePhoto(true)} disabled={uploading}>
+                  Удалить
+                </button>
+              </>
+            ) : (
+              <button className="pd-photo-btn" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                {uploading ? 'Загрузка...' : '📷 Добавить фото'}
+              </button>
+            )}
+          </div>
           <div className="pd-name">{name}</div>
           {plant.latin_name && <div className="pd-latin">{plant.latin_name}</div>}
           {up.nickname && <div className="pd-species">{plant.common_name}</div>}
@@ -290,6 +357,17 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
           )}
         </div>
       </div>
+
+      {showDeletePhoto && (
+        <ConfirmDialog
+          icon="🗑"
+          title="Удалить фото растения?"
+          text="Карточка снова будет использовать фото из каталога или заглушку."
+          confirmLabel="Удалить"
+          onConfirm={handleDeletePhoto}
+          onCancel={() => setShowDeletePhoto(false)}
+        />
+      )}
     </div>
   )
 }

@@ -1,6 +1,6 @@
-import { requireAuth } from '../_lib/auth.js'
-import { getSupabase } from '../_lib/supabase.js'
-import { getEffectiveInterval, calcWateringDates, buildIntervalUpdates } from '../_lib/watering.js'
+import { requireAuth } from './_lib/auth.js'
+import { getSupabase } from './_lib/supabase.js'
+import { getEffectiveInterval, calcWateringDates, buildIntervalUpdates } from './_lib/watering.js'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -108,8 +108,6 @@ async function handlePatchPlant(req, res, user, sb, id) {
 }
 
 async function handleWater(req, res, user, sb, id) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
-
   const { data: userPlant, error: fetchErr } = await sb
     .from('user_plants')
     .select(`id, user_id, plant_id,
@@ -144,8 +142,6 @@ async function handleWater(req, res, user, sb, id) {
 }
 
 async function handleEvents(req, res, user, sb, id) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
-
   const { type, note } = req.body || {}
   const validTypes = ['watering', 'fertilizing', 'repotting', 'check', 'note']
   if (!type || !validTypes.includes(type)) {
@@ -187,8 +183,6 @@ async function handleEvents(req, res, user, sb, id) {
 }
 
 async function handleArchive(req, res, user, sb, id) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
-
   const { data: userPlant, error: fetchErr } = await sb
     .from('user_plants')
     .select('id, user_id')
@@ -210,8 +204,6 @@ async function handleArchive(req, res, user, sb, id) {
 }
 
 async function handleUnarchive(req, res, user, sb, id) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
-
   const { data: userPlant, error: fetchErr } = await sb
     .from('user_plants')
     .select(`id, user_id, is_archived, last_watered,
@@ -245,9 +237,7 @@ export default async function handler(req, res) {
     const user = await requireAuth(req)
     const sb = getSupabase()
 
-    const pathSegments = req.query.path || []
-    const id = pathSegments[0]
-    const action = pathSegments[1] || null
+    const { id, action } = req.query
 
     if (!id || !UUID_RE.test(id)) {
       return res.status(400).json({ error: 'Invalid plant id' })
@@ -259,17 +249,21 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed' })
     }
 
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' })
+    }
+
     switch (action) {
       case 'water': return handleWater(req, res, user, sb, id)
       case 'events': return handleEvents(req, res, user, sb, id)
       case 'archive': return handleArchive(req, res, user, sb, id)
       case 'unarchive': return handleUnarchive(req, res, user, sb, id)
-      default: return res.status(404).json({ error: 'Not found' })
+      default: return res.status(400).json({ error: 'Unknown action' })
     }
   } catch (e) {
     const msg = e.message
     const status = msg === 'Unauthorized' ? 401 : 500
-    if (status === 500) console.error('/api/user-plants/[...path] error:', msg)
+    if (status === 500) console.error('/api/user-plant error:', msg)
     res.status(status).json({ error: msg })
   }
 }

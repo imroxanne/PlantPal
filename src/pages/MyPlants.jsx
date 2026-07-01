@@ -21,7 +21,7 @@ function SkeletonCards() {
   )
 }
 
-export default function MyPlants({ onAdd, onPlantTap, onShowToast, onTaskCountChange, onArchive }) {
+export default function MyPlants({ onAdd, onPlantTap, onShowToast, onTaskCountChange, onArchive, onOpenSettings }) {
   const [userPlants, setUserPlants] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -73,6 +73,11 @@ export default function MyPlants({ onAdd, onPlantTap, onShowToast, onTaskCountCh
           {onArchive && (
             <button className="my-plants-archive-btn" onClick={onArchive}>
               📦
+            </button>
+          )}
+          {onOpenSettings && (
+            <button className="my-plants-archive-btn" onClick={onOpenSettings}>
+              ⚙
             </button>
           )}
         </div>

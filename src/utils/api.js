@@ -59,4 +59,10 @@ export const api = {
       method: 'DELETE',
       body: JSON.stringify({ period }),
     }),
+  getSettings: () => request('/settings'),
+  updateSettings: (fields) =>
+    request('/settings', {
+      method: 'PATCH',
+      body: JSON.stringify(fields),
+    }),
 }

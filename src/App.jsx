@@ -11,6 +11,7 @@ import PlantSettings from './pages/PlantSettings'
 import Tasks from './pages/Tasks'
 import History from './pages/History'
 import ArchivedPlants from './pages/ArchivedPlants'
+import Settings from './pages/Settings'
 
 export default function App() {
   const [tab, setTab] = useState('plants')
@@ -48,6 +49,10 @@ export default function App() {
       setScreenData(null)
       setTab('plants')
       setRefreshKey((k) => k + 1)
+    } else if (screen === 'app-settings') {
+      setScreen(null)
+      setScreenData(null)
+      setTab('plants')
     } else if (screen) {
       setScreen(null)
       setScreenData(null)
@@ -159,6 +164,18 @@ export default function App() {
     )
   }
 
+  if (screen === 'app-settings') {
+    return (
+      <div className="screen-enter" key="app-settings">
+        <Settings
+          onBack={goBack}
+          onShowToast={showToast}
+        />
+        {toast && <Toast message={toast.message} type={toast.type} onClose={clearToast} />}
+      </div>
+    )
+  }
+
   if (screen === 'archived') {
     return (
       <div className="screen-enter" key="archived">
@@ -206,6 +223,7 @@ export default function App() {
           onShowToast={showToast}
           onTaskCountChange={refreshTaskCount}
           onArchive={() => navigateScreen('archived')}
+          onOpenSettings={() => navigateScreen('app-settings')}
         />
       )}
       {tab === 'tasks' && (

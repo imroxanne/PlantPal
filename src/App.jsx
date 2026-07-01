@@ -38,6 +38,7 @@ export default function App() {
       setScreen('search')
     } else if (screen === 'settings') {
       setScreen('plant-detail')
+      setScreenData((prev) => ({ userPlantId: prev?.userPlant?.id }))
     } else if (screen) {
       setScreen(null)
       setScreenData(null)

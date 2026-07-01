@@ -53,6 +53,7 @@ export default async function handler(req, res) {
 
       if (eventsErr) throw new Error(`Database error: ${eventsErr.message}`)
 
+      res.setHeader('Cache-Control', 'no-store')
       res.json({ user_plant: userPlant, care_events: events || [] })
       return
     }

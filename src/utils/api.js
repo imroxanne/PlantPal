@@ -29,6 +29,9 @@ export const api = {
   searchPlants: (q) => request('/plants?q=' + encodeURIComponent(q)),
   getPlants: () => request('/plants'),
   getUserPlants: () => request('/user-plants'),
+  getArchivedPlants: () => request('/user-plants?archived=true'),
+  unarchivePlant: (id) =>
+    request('/user-plants/' + id + '/unarchive', { method: 'POST' }),
   addUserPlant: (plantId, nickname) =>
     request('/user-plants', {
       method: 'POST',
@@ -49,7 +52,8 @@ export const api = {
       body: JSON.stringify({ type, note: note || undefined }),
     }),
   getTasks: () => request('/tasks'),
-  getCareEvents: () => request('/care-events'),
+  getCareEvents: (userPlantId) =>
+    request('/care-events' + (userPlantId ? '?userPlantId=' + userPlantId : '')),
   deleteCareEvents: (period) =>
     request('/care-events', {
       method: 'DELETE',

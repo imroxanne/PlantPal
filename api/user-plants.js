@@ -8,17 +8,19 @@ export default async function handler(req, res) {
     const sb = getSupabase()
 
     if (req.method === 'GET') {
+      const showArchived = req.query.archived === 'true'
       const { data, error } = await sb
         .from('user_plants')
         .select(`id, nickname, last_watered, next_watering_at, next_watering_window_end_at,
           custom_watering_interval_days, custom_watering_interval_min_days,
-          custom_watering_interval_max_days, photo_url, created_at,
+          custom_watering_interval_max_days, photo_url, archived_at, created_at,
           plant:plants(id, common_name, latin_name, watering_interval_days, image_url)`)
         .eq('user_id', user.id)
-        .eq('is_archived', false)
+        .eq('is_archived', showArchived)
         .order('created_at', { ascending: false })
 
       if (error) throw new Error(`Database error: ${error.message}`)
+      res.setHeader('Cache-Control', 'no-store')
       res.json({ user_plants: data })
       return
     }

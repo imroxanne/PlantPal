@@ -43,10 +43,17 @@ export default async function handler(req, res) {
       return
     }
 
-    const { data, error } = await sb
+    let eventsQuery = sb
       .from('care_events')
       .select('id, type, note, created_at, user_plant:user_plants(id, nickname, plant:plants(common_name))')
       .eq('user_id', user.id)
+
+    const { userPlantId } = req.query || {}
+    if (userPlantId) {
+      eventsQuery = eventsQuery.eq('user_plant_id', userPlantId)
+    }
+
+    const { data, error } = await eventsQuery
       .order('created_at', { ascending: false })
       .limit(50)
 

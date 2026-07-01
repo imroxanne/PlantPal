@@ -282,7 +282,7 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
                 ))}
               </div>
               {events.length >= 5 && onViewHistory && (
-                <button className="pd-history-all" onClick={onViewHistory}>
+                <button className="pd-history-all" onClick={() => onViewHistory(userPlantId, name)}>
                   Вся история →
                 </button>
               )}

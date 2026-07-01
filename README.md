@@ -4,43 +4,82 @@
 
 ## Стек
 
-- **Frontend:** React + Vite
-- **Backend:** Vercel Serverless Functions
+- **Frontend:** React 19 + Vite 8
+- **Backend:** Vercel Serverless Functions (ESM)
 - **Database:** Supabase (PostgreSQL)
 - **Telegram:** WebApp SDK + Bot API
 - **Хостинг:** Vercel
+
+## Возможности
+
+- Поиск и добавление растений из каталога
+- Коллекция растений с плашками статуса полива
+- Карточка растения: быстрые действия (полив, подкормка, пересадка, проверка, заметка)
+- Гибкий интервал полива (точный или диапазон)
+- Расчёт окна следующего полива
+- Задачи с группировкой (просрочено, сегодня, завтра, на неделе) и badge
+- История ухода (общая и по конкретному растению)
+- Очистка истории за выбранный период
+- Настройки растения (имя, расположение, заметки, интервал)
+- Архивирование и восстановление растений
+- Haptic feedback (Telegram WebApp)
+- Screen transitions с поддержкой prefers-reduced-motion
+- Telegram BackButton интеграция
+- Toast-уведомления
+- Предупреждение о несохранённых изменениях
 
 ## Структура проекта
 
 ```
 PlantPal/
-├── api/                     # Серверные функции (Vercel)
-│   ├── _lib/                # Общие утилиты бекенда
-│   │   ├── auth.js          # HMAC-проверка initData, авторизация
-│   │   └── supabase.js      # Клиент Supabase
-│   └── home.js              # GET /api/home
+├── api/                          # Серверные функции (Vercel)
+│   ├── _lib/
+│   │   ├── auth.js               # HMAC-проверка initData
+│   │   ├── supabase.js           # Клиент Supabase
+│   │   └── watering.js           # Расчёт интервалов полива
+│   ├── home.js                   # GET /api/home
+│   ├── health.js                 # GET /api/health
+│   ├── plants.js                 # GET /api/plants
+│   ├── tasks.js                  # GET /api/tasks
+│   ├── care-events.js            # GET/DELETE /api/care-events
+│   ├── user-plants.js            # GET/POST /api/user-plants
+│   ├── user-plants/[id].js       # GET/PATCH /api/user-plants/:id
+│   └── user-plants/[id]/
+│       ├── water.js              # POST water
+│       ├── events.js             # POST events
+│       ├── archive.js            # POST archive
+│       └── unarchive.js          # POST unarchive
 ├── src/
-│   ├── main.jsx             # Точка входа React
-│   ├── App.jsx              # Корневой компонент
-│   ├── index.css            # Глобальные стили
-│   ├── pages/               # Экраны приложения
-│   │   ├── MyPlants.jsx     # Главный экран — коллекция
-│   │   └── MyPlants.css
-│   ├── components/          # Переиспользуемые компоненты
+│   ├── main.jsx                  # Точка входа
+│   ├── App.jsx                   # Роутинг и навигация
+│   ├── index.css                 # Design system, переменные, анимации
+│   ├── pages/
+│   │   ├── MyPlants.jsx          # Коллекция растений
+│   │   ├── SearchPlant.jsx       # Поиск растений
+│   │   ├── AddPlantDetails.jsx   # Добавление растения
+│   │   ├── PlantDetail.jsx       # Карточка растения
+│   │   ├── PlantSettings.jsx     # Настройки растения
+│   │   ├── Tasks.jsx             # Задачи по поливу
+│   │   ├── History.jsx           # История ухода
+│   │   └── ArchivedPlants.jsx    # Архив растений
+│   ├── components/
+│   │   ├── BottomNav.jsx         # Нижняя навигация
+│   │   ├── PlantAvatar.jsx       # Аватар растения (image + fallback)
+│   │   ├── Toast.jsx             # Toast-уведомления
+│   │   └── ConfirmDialog.jsx     # Диалог подтверждения
 │   └── utils/
-│       ├── telegram.js      # Обёртка Telegram SDK
-│       └── api.js           # HTTP-клиент
-├── public/
-│   └── assets/              # Статика (изображения, иконки)
-├── index.html               # HTML-шаблон (Telegram SDK подключён)
+│       ├── api.js                # HTTP-клиент
+│       ├── telegram.js           # Telegram SDK обёртка
+│       └── status.js             # Статусы, форматирование дат
+├── index.html
 ├── package.json
-├── vite.config.js           # Vite конфиг с proxy для dev
-└── vercel.json              # Rewrites для SPA и API
+├── vite.config.js
+└── vercel.json                   # Rewrites для SPA и API
 ```
 
 ## Запуск локально
 
-### 1. Установка зависимостей
+### 1. Установка
 
 ```bash
 npm install
@@ -48,28 +87,21 @@ npm install
 
 ### 2. Переменные окружения
 
-Создай файл `.env` в корне проекта:
+Создай файл `.env` в корне:
 
 ```
-TELEGRAM_BOT_TOKEN=your_bot_token_here
-ADMIN_TELEGRAM_ID=your_telegram_id_here
-SUPABASE_URL=your_supabase_url_here
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_key_here
+TELEGRAM_BOT_TOKEN=...
+SUPABASE_URL=...
+SUPABASE_SERVICE_ROLE_KEY=...
 ```
 
-### 3. Запуск dev-сервера
+### 3. Dev-сервер
 
 ```bash
 npm run dev
 ```
 
-Приложение откроется на `http://localhost:5173`.
-
-В браузере работает dev-режим: запросы к API автоматически подставляют заголовок `x-dev-telegram-id` вместо Telegram initData.
-
-### 4. Без Supabase
-
-Приложение запускается без Supabase — фронтенд загружается нормально. Запрос к `/api/home` вернёт ошибку, пока Supabase не настроен.
+В браузере работает dev-режим: API запросы используют заголовок `x-dev-telegram-id` вместо Telegram initData.
 
 ## Деплой на Vercel
 
@@ -77,93 +109,22 @@ npm run dev
 2. Добавь переменные окружения в Settings → Environment Variables
 3. Деплой произойдёт автоматически
 
-## Supabase — схема таблиц
-
-### users
-
-```sql
-CREATE TABLE users (
-  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  telegram_id     text UNIQUE NOT NULL,
-  display_name    text NOT NULL DEFAULT 'Пользователь',
-  role            text NOT NULL DEFAULT 'user',
-  notification_time text DEFAULT NULL,
-  timezone        text DEFAULT 'Europe/Moscow',
-  last_seen_at    timestamptz DEFAULT now(),
-  created_at      timestamptz NOT NULL DEFAULT now()
-);
-```
-
-### plants (Этап 1)
-
-```sql
-CREATE TABLE plants (
-  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  name            text NOT NULL,
-  name_latin      text,
-  aliases         text[] DEFAULT '{}',
-  status          text NOT NULL DEFAULT 'published',
-  watering_interval_days integer NOT NULL DEFAULT 7,
-  light           text,
-  temperature     text,
-  humidity        text,
-  soil            text,
-  fertilizing     text,
-  repotting       text,
-  toxicity        text,
-  diseases        text,
-  pests           text,
-  notes           text,
-  created_at      timestamptz NOT NULL DEFAULT now()
-);
-```
-
-### user_plants (Этап 1)
-
-```sql
-CREATE TABLE user_plants (
-  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id         uuid NOT NULL REFERENCES users(id),
-  plant_id        uuid NOT NULL REFERENCES plants(id),
-  nickname        text,
-  photo_url       text,
-  purchase_date   date,
-  last_watered    timestamptz,
-  last_fertilized timestamptz,
-  last_repotted   timestamptz,
-  is_archived     boolean NOT NULL DEFAULT false,
-  created_at      timestamptz NOT NULL DEFAULT now()
-);
-```
-
-### care_events (Этап 2)
-
-```sql
-CREATE TABLE care_events (
-  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_plant_id   uuid NOT NULL REFERENCES user_plants(id),
-  event_type      text NOT NULL,
-  note            text,
-  photo_url       text,
-  created_at      timestamptz NOT NULL DEFAULT now()
-);
-```
-
 ## Безопасность
 
 - Telegram initData проверяется на сервере через HMAC-SHA256
-- Секреты (`TELEGRAM_BOT_TOKEN`, `SUPABASE_SERVICE_ROLE_KEY`) только на бекенде
-- Админские эндпоинты защищены через `requireAdmin`
+- Секреты только на бекенде
 - Dev-обход работает только при `NODE_ENV !== 'production'`
+- Поиск экранирует спецсимволы в ilike-запросах
 
 ## Roadmap
 
-- [x] Этап 0 — Скелет проекта
-- [x] Этап 1 — Каталог растений + добавление в коллекцию
-- [x] Этап 2 — Карточка растения + действия по уходу
-- [x] Этап 3 — Задачи + история + настройки растения
-- [ ] Этап 4 — Настройки + уведомления через бота
-- [ ] Этап 5 — Progressive Onboarding + точность рекомендаций
-- [ ] Этап 6 — Модерация (админ)
-- [ ] Этап 7 — AI pipeline
-- [ ] Этап 8 — Офлайн-режим
+- [x] Каталог растений + добавление в коллекцию
+- [x] Карточка растения + действия по уходу
+- [x] Задачи + история + настройки
+- [x] Гибкий интервал полива (точный / диапазон)
+- [x] Visual System Alignment
+- [x] Advanced UX Polish (haptic, transitions, unsaved warning)
+- [x] Bugfix + History Cleanup
+- [x] MVP Stabilization (unarchive, plant history, search fix)
+- [ ] Настройки пользователя + уведомления через бота
+- [ ] AI pipeline

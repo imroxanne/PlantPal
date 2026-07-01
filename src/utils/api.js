@@ -50,4 +50,9 @@ export const api = {
     }),
   getTasks: () => request('/tasks'),
   getCareEvents: () => request('/care-events'),
+  deleteCareEvents: (period) =>
+    request('/care-events', {
+      method: 'DELETE',
+      body: JSON.stringify({ period }),
+    }),
 }

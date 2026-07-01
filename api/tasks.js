@@ -50,6 +50,7 @@ export default async function handler(req, res) {
       }
     }
 
+    res.setHeader('Cache-Control', 'no-store')
     res.json({ tasks: groups })
   } catch (e) {
     const msg = e.message

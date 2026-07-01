@@ -8,6 +8,9 @@
   padding: 16px 20px 12px;
   background: var(--bg-card);
   border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .history-header h1 {
@@ -15,6 +18,26 @@
   font-weight: 700;
   letter-spacing: -0.3px;
   color: var(--heading);
+}
+
+.history-cleanup-btn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  padding: 8px 12px;
+  margin: -8px -12px -8px 0;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.history-cleanup-btn:active {
+  opacity: 0.6;
 }
 
 .history-body {
@@ -168,4 +191,34 @@
 
 .history-skeleton-item:last-child {
   border-bottom: none;
+}
+
+/* Period chips */
+
+.history-period-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 16px;
+  justify-content: center;
+}
+
+.history-period-chip {
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-full);
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 100ms, background 100ms;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.history-period-chip-active {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
 }

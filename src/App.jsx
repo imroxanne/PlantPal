@@ -182,6 +182,7 @@ export default function App() {
         <History
           key={refreshKey}
           onPlantTap={(userPlantId) => navigateScreen('plant-detail', { userPlantId })}
+          onShowToast={showToast}
         />
       )}
       {showBottomNav && (

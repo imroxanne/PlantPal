@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
-import { formatNextWatering } from '../utils/status'
+import { formatNextWatering, EVENT_ICONS, EVENT_LABELS } from '../utils/status'
 import { hapticSuccess, hapticError } from '../utils/telegram'
 import PlantAvatar from '../components/PlantAvatar'
 import './Tasks.css'
@@ -41,22 +41,24 @@ export default function Tasks({ onPlantTap, onShowToast, onTaskCountChange }) {
       .finally(() => setLoading(false))
   }, [])
 
-  const handleComplete = async (e, plantId) => {
+  const handleComplete = async (e, plantId, taskType) => {
     e.stopPropagation()
-    setCompleting(plantId)
+    const taskKey = plantId + ':' + taskType
+    setCompleting(taskKey)
     try {
-      await api.createEvent(plantId, 'watering')
+      await api.createEvent(plantId, taskType)
       setTasks((prev) => {
         const next = {}
         for (const [key, items] of Object.entries(prev)) {
-          next[key] = items.filter((p) => p.id !== plantId)
+          next[key] = items.filter((t) => !(t.id === plantId && t.taskType === taskType))
         }
         return next
       })
       onTaskCountChange?.()
       api.getTasks().then((d) => setTasks(d.tasks)).catch(() => {})
       hapticSuccess()
-      onShowToast?.('Полив отмечен!')
+      const toastLabels = { watering: 'Полив отмечен!', fertilizing: 'Подкормка отмечена!', repotting: 'Пересадка отмечена!' }
+      onShowToast?.(toastLabels[taskType] || 'Отмечено!')
     } catch (err) {
       hapticError()
       onShowToast?.('Ошибка: ' + err.message, 'error')
@@ -114,30 +116,35 @@ export default function Tasks({ onPlantTap, onShowToast, onTaskCountChange }) {
                 <div className="tasks-group-list">
                   {items.map((up, idx) => {
                     const name = up.nickname || up.plant.common_name
+                    const taskKey = up.id + ':' + up.taskType
+                    const typeIcon = EVENT_ICONS[up.taskType] || '💧'
+                    const typeLabel = EVENT_LABELS[up.taskType] || ''
                     return (
                       <div
-                        key={up.id}
+                        key={taskKey}
                         className={`task-card ${groupKey === 'overdue' ? 'task-card-overdue' : ''}`}
                         style={{ animationDelay: `${idx * 60}ms` }}
                         onClick={() => onPlantTap(up.id)}
                       >
                         <PlantAvatar name={name} imageUrl={up.plant.image_url} photoUrl={up.photo_url} size={40} />
                         <div className="task-card-info">
-                          <div className="task-card-name">{name}</div>
-                          {(up.nickname || up.next_watering_window_end_at) && (
-                            <div className="task-card-species">
-                              {up.next_watering_window_end_at
+                          <div className="task-card-name">
+                            {up.taskType !== 'watering' && <span className="task-card-type-icon">{typeIcon} </span>}
+                            {name}
+                          </div>
+                          <div className="task-card-species">
+                            {up.taskType !== 'watering' ? typeLabel
+                              : up.next_watering_window_end_at
                                 ? formatNextWatering(up.next_watering_at, up.next_watering_window_end_at)
-                                : up.plant.common_name}
-                            </div>
-                          )}
+                                : up.nickname ? up.plant.common_name : ''}
+                          </div>
                         </div>
                         <button
                           className="task-card-done"
-                          onClick={(e) => handleComplete(e, up.id)}
-                          disabled={completing === up.id}
+                          onClick={(e) => handleComplete(e, up.id, up.taskType)}
+                          disabled={completing === taskKey}
                         >
-                          {completing === up.id ? '...' : 'Готово'}
+                          {completing === taskKey ? '...' : 'Готово'}
                         </button>
                       </div>
                     )

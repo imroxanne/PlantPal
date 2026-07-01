@@ -9,10 +9,11 @@ export async function getUserTasks(userId, referenceDate) {
     .from('user_plants')
     .select(`id, nickname, photo_url, last_watered, next_watering_at, next_watering_window_end_at,
       custom_watering_interval_min_days, custom_watering_interval_max_days,
+      last_fertilized_at, next_fertilizing_at, fertilizing_interval_days,
+      last_repotted_at, next_repotting_at, repotting_interval_days,
       plant:plants(id, common_name, latin_name, watering_interval_days, image_url)`)
     .eq('user_id', userId)
     .eq('is_archived', false)
-    .not('next_watering_at', 'is', null)
     .order('next_watering_at', { ascending: true })
 
   if (error) throw new Error(`Database error: ${error.message}`)
@@ -25,24 +26,31 @@ export async function getUserTasks(userId, referenceDate) {
   const groups = { overdue: [], today: [], tomorrow: [], week: [] }
 
   for (const up of data || []) {
-    const windowEnd = up.next_watering_window_end_at
-      ? new Date(up.next_watering_window_end_at)
-      : null
-    const next = new Date(up.next_watering_at)
-
-    if (windowEnd) {
-      if (todayStart > windowEnd) groups.overdue.push(up)
-      else if (todayStart >= next && todayStart <= windowEnd) groups.today.push(up)
-      else if (next < tomorrowStart) groups.today.push(up)
-      else if (next < new Date(tomorrowStart.getTime() + DAY_MS)) groups.tomorrow.push(up)
-      else if (next < weekEnd) groups.week.push(up)
-    } else {
-      if (next < todayStart) groups.overdue.push(up)
-      else if (next < tomorrowStart) groups.today.push(up)
-      else if (next < new Date(tomorrowStart.getTime() + DAY_MS)) groups.tomorrow.push(up)
-      else if (next < weekEnd) groups.week.push(up)
-    }
+    addCareTask(groups, up, 'watering', up.next_watering_at, up.next_watering_window_end_at, todayStart, tomorrowStart, weekEnd)
+    addCareTask(groups, up, 'fertilizing', up.next_fertilizing_at, null, todayStart, tomorrowStart, weekEnd)
+    addCareTask(groups, up, 'repotting', up.next_repotting_at, null, todayStart, tomorrowStart, weekEnd)
   }
 
   return groups
+}
+
+function addCareTask(groups, up, taskType, nextAt, windowEndAt, todayStart, tomorrowStart, weekEnd) {
+  if (!nextAt) return
+
+  const task = { ...up, taskType }
+  const next = new Date(nextAt)
+  const windowEnd = windowEndAt ? new Date(windowEndAt) : null
+
+  if (windowEnd) {
+    if (todayStart > windowEnd) groups.overdue.push(task)
+    else if (todayStart >= next && todayStart <= windowEnd) groups.today.push(task)
+    else if (next < tomorrowStart) groups.today.push(task)
+    else if (next < new Date(tomorrowStart.getTime() + DAY_MS)) groups.tomorrow.push(task)
+    else if (next < weekEnd) groups.week.push(task)
+  } else {
+    if (next < todayStart) groups.overdue.push(task)
+    else if (next < tomorrowStart) groups.today.push(task)
+    else if (next < new Date(tomorrowStart.getTime() + DAY_MS)) groups.tomorrow.push(task)
+    else if (next < weekEnd) groups.week.push(task)
+  }
 }

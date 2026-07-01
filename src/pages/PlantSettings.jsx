@@ -29,6 +29,16 @@ export default function PlantSettings({ userPlant, onSaved, onArchived, onBack, 
     hasRange ? userPlant.custom_watering_interval_max_days.toString() : ''
   )
 
+  const initFertEnabled = !!userPlant.fertilizing_interval_days
+  const initFertDays = initFertEnabled ? userPlant.fertilizing_interval_days.toString() : ''
+  const [fertEnabled, setFertEnabled] = useState(initFertEnabled)
+  const [fertDays, setFertDays] = useState(initFertDays)
+
+  const initRepotEnabled = !!userPlant.repotting_interval_days
+  const initRepotDays = initRepotEnabled ? userPlant.repotting_interval_days.toString() : ''
+  const [repotEnabled, setRepotEnabled] = useState(initRepotEnabled)
+  const [repotDays, setRepotDays] = useState(initRepotDays)
+
   const initialNickname = userPlant.nickname || ''
   const initialLocation = userPlant.location || ''
   const initialNotes = userPlant.notes || ''
@@ -43,9 +53,15 @@ export default function PlantSettings({ userPlant, onSaved, onArchived, onBack, 
     if (intervalMode !== initialMode) return true
     if (intervalMode === 'exact' && exactDays !== initialExactDays) return true
     if (intervalMode === 'range' && (minDays !== initialMinDays || maxDays !== initialMaxDays)) return true
+    if (fertEnabled !== initFertEnabled) return true
+    if (fertEnabled && fertDays !== initFertDays) return true
+    if (repotEnabled !== initRepotEnabled) return true
+    if (repotEnabled && repotDays !== initRepotDays) return true
     return false
   }, [nickname, location, notes, intervalMode, exactDays, minDays, maxDays,
-      initialNickname, initialLocation, initialNotes, initialMode, initialExactDays, initialMinDays, initialMaxDays])
+      fertEnabled, fertDays, repotEnabled, repotDays,
+      initialNickname, initialLocation, initialNotes, initialMode, initialExactDays, initialMinDays, initialMaxDays,
+      initFertEnabled, initFertDays, initRepotEnabled, initRepotDays])
 
   const handleBack = useCallback(() => {
     if (isDirty) {
@@ -102,6 +118,28 @@ export default function PlantSettings({ userPlant, onSaved, onArchived, onBack, 
       body.custom_watering_interval_days = null
       body.custom_watering_interval_min_days = null
       body.custom_watering_interval_max_days = null
+    }
+
+    if (fertEnabled) {
+      const val = Number(fertDays)
+      if (!fertDays || val < 1 || val > 730) {
+        onShowToast?.('Укажите интервал подкормки от 1 до 730 дней', 'error')
+        return
+      }
+      body.fertilizing_interval_days = val
+    } else {
+      body.fertilizing_interval_days = null
+    }
+
+    if (repotEnabled) {
+      const val = Number(repotDays)
+      if (!repotDays || val < 1 || val > 730) {
+        onShowToast?.('Укажите интервал пересадки от 1 до 730 дней', 'error')
+        return
+      }
+      body.repotting_interval_days = val
+    } else {
+      body.repotting_interval_days = null
     }
 
     setSaving(true)
@@ -279,6 +317,75 @@ export default function PlantSettings({ userPlant, onSaved, onArchived, onBack, 
               <span className="ps-range-hint">
                 Будет использоваться стандартный интервал из каталога
               </span>
+            </div>
+          )}
+        </div>
+
+        <div className="ps-section-label">Дополнительный уход</div>
+        <div className="ps-card">
+          <div className="ps-field">
+            <div className="ps-toggle-row">
+              <label className="ps-label">Подкормка</label>
+              <button
+                className={`ps-toggle ${fertEnabled ? 'ps-toggle-on' : ''}`}
+                onClick={() => setFertEnabled(!fertEnabled)}
+                type="button"
+              >
+                <span className="ps-toggle-knob" />
+              </button>
+            </div>
+          </div>
+          {fertEnabled && (
+            <div className="ps-field ps-field-last">
+              <label className="ps-label">Каждые N дней</label>
+              <input
+                className="ps-input ps-input-number"
+                type="number"
+                min="1"
+                max="730"
+                value={fertDays}
+                onChange={(e) => setFertDays(e.target.value)}
+                placeholder="30"
+              />
+            </div>
+          )}
+          {!fertEnabled && (
+            <div className="ps-field ps-field-last">
+              <span className="ps-range-hint">Расписание подкормки не задано</span>
+            </div>
+          )}
+        </div>
+
+        <div className="ps-card">
+          <div className="ps-field">
+            <div className="ps-toggle-row">
+              <label className="ps-label">Пересадка</label>
+              <button
+                className={`ps-toggle ${repotEnabled ? 'ps-toggle-on' : ''}`}
+                onClick={() => setRepotEnabled(!repotEnabled)}
+                type="button"
+              >
+                <span className="ps-toggle-knob" />
+              </button>
+            </div>
+          </div>
+          {repotEnabled && (
+            <div className="ps-field ps-field-last">
+              <label className="ps-label">Каждые N дней</label>
+              <input
+                className="ps-input ps-input-number"
+                type="number"
+                min="1"
+                max="730"
+                value={repotDays}
+                onChange={(e) => setRepotDays(e.target.value)}
+                placeholder="365"
+              />
+            </div>
+          )}
+          {!repotEnabled && (
+            <div className="ps-field ps-field-last">
+              <span className="ps-range-hint">Расписание пересадки не задано</span>
             </div>
           )}
         </div>

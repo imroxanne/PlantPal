@@ -121,7 +121,7 @@ export default function Tasks({ onPlantTap, onShowToast, onTaskCountChange }) {
                         style={{ animationDelay: `${idx * 60}ms` }}
                         onClick={() => onPlantTap(up.id)}
                       >
-                        <PlantAvatar name={name} imageUrl={up.plant.image_url} size={40} />
+                        <PlantAvatar name={name} imageUrl={up.plant.image_url} photoUrl={up.photo_url} size={40} />
                         <div className="task-card-info">
                           <div className="task-card-name">{name}</div>
                           {(up.nickname || up.next_watering_window_end_at) && (

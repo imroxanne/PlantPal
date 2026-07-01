@@ -7,7 +7,7 @@ export async function getUserTasks(userId, referenceDate) {
 
   const { data, error } = await sb
     .from('user_plants')
-    .select(`id, nickname, last_watered, next_watering_at, next_watering_window_end_at,
+    .select(`id, nickname, photo_url, last_watered, next_watering_at, next_watering_window_end_at,
       custom_watering_interval_min_days, custom_watering_interval_max_days,
       plant:plants(id, common_name, latin_name, watering_interval_days, image_url)`)
     .eq('user_id', userId)

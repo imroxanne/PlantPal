@@ -29,6 +29,7 @@
 - Предупреждение о несохранённых изменениях
 - Ежедневные Telegram-напоминания о поливе (Vercel Cron + Bot API)
 - Настройки уведомлений (включение/выключение)
+- Загрузка пользовательского фото растения (одно фото, JPEG/PNG/WebP, до 3 МБ)
 
 > **Vercel Hobby plan:** cron запускается раз в день утром (ограничение Hobby).
 > Выбор точного времени — Post-MVP (требует Vercel Pro или внешний scheduler).
@@ -37,7 +38,7 @@
 
 ```
 PlantPal/
-├── api/                          # Серверные функции (Vercel)
+├── api/                          # Серверные функции (Vercel, 10 шт.)
 │   ├── _lib/
 │   │   ├── auth.js               # HMAC-проверка initData
 │   │   ├── supabase.js           # Клиент Supabase
@@ -53,12 +54,8 @@ PlantPal/
 │   ├── cron/
 │   │   └── send-reminders.js     # Cron: отправка напоминаний
 │   ├── user-plants.js            # GET/POST /api/user-plants
-│   ├── user-plants/[id].js       # GET/PATCH /api/user-plants/:id
-│   └── user-plants/[id]/
-│       ├── water.js              # POST water
-│       ├── events.js             # POST events
-│       ├── archive.js            # POST archive
-│       └── unarchive.js          # POST unarchive
+│   ├── user-plant.js             # GET/PATCH/POST /api/user-plant?id=&action=
+│   └── user-plant-photo.js       # POST/DELETE /api/user-plant-photo
 ├── src/
 │   ├── main.jsx                  # Точка входа
 │   ├── App.jsx                   # Роутинг и навигация
@@ -104,6 +101,7 @@ npm install
 TELEGRAM_BOT_TOKEN=...
 SUPABASE_URL=...
 SUPABASE_SERVICE_ROLE_KEY=...
+CRON_SECRET=...
 ```
 
 ### 3. Dev-сервер
@@ -117,8 +115,22 @@ npm run dev
 ## Деплой на Vercel
 
 1. Подключи репозиторий к Vercel
-2. Добавь переменные окружения в Settings → Environment Variables
-3. Деплой произойдёт автоматически
+2. Добавь переменные окружения в Settings → Environment Variables:
+   - `TELEGRAM_BOT_TOKEN` — токен Telegram-бота
+   - `SUPABASE_URL` — URL проекта Supabase
+   - `SUPABASE_SERVICE_ROLE_KEY` — сервисный ключ Supabase
+   - `CRON_SECRET` — секрет для авторизации cron-endpoint
+3. Выполни SQL из `supabase/stage_f_notifications.sql` и `supabase/stage_g_plant_photos.sql` в Supabase
+4. Деплой произойдёт автоматически
+
+### Supabase Storage
+
+Фото растений хранятся в публичном Supabase Storage bucket `plant-photos`.
+Путь: `{user_id}/{user_plant_id}/photo`. Загрузка и удаление — только через backend (service role key).
+
+> **Публичный bucket**: фото доступны по прямому URL. Для MVP это допустимо,
+> так как фото растений не содержат приватных данных. URL содержит user_id и не
+> является угадываемым.
 
 ## Безопасность
 
@@ -138,4 +150,5 @@ npm run dev
 - [x] Bugfix + History Cleanup
 - [x] MVP Stabilization (unarchive, plant history, search fix)
 - [x] Настройки пользователя + уведомления через бота
-- [ ] AI pipeline
+- [x] Hotfix: flat API routing (api/user-plant.js)
+- [x] Загрузка фото растений (Supabase Storage)

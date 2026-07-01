@@ -149,7 +149,7 @@
   text-align: center;
   margin-top: 16px;
   padding: 10px 16px;
-  background: #FDF2F2;
+  background: var(--warning-bg);
   border-radius: var(--radius-sm);
   max-width: 340px;
   width: 100%;

@@ -50,15 +50,17 @@ export default function History({ onPlantTap }) {
 
       {loading && (
         <div className="history-skeleton">
-          {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="history-skeleton-item">
-              <div className="skel" style={{ width: 34, height: 34, borderRadius: 10 }} />
-              <div style={{ flex: 1 }}>
-                <div className="skel" style={{ width: '55%', height: 13, borderRadius: 5 }} />
-                <div className="skel" style={{ width: '70%', height: 11, borderRadius: 5, marginTop: 8 }} />
+          <div className="history-skeleton-card">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="history-skeleton-item">
+                <div className="skel" style={{ width: 34, height: 34, borderRadius: 10 }} />
+                <div style={{ flex: 1 }}>
+                  <div className="skel" style={{ width: '55%', height: 13, borderRadius: 5 }} />
+                  <div className="skel" style={{ width: '70%', height: 11, borderRadius: 5, marginTop: 8 }} />
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
@@ -86,7 +88,7 @@ export default function History({ onPlantTap }) {
             <div key={group.label} className="history-group">
               <div className="history-group-label">{group.label}</div>
               <div className="history-group-list">
-                {group.events.map((ev) => {
+                {group.events.map((ev, idx) => {
                   const plantName =
                     ev.user_plant?.nickname || ev.user_plant?.plant?.common_name || '—'
                   const userPlantId = ev.user_plant?.id
@@ -94,6 +96,7 @@ export default function History({ onPlantTap }) {
                     <div
                       key={ev.id}
                       className={`history-item ${userPlantId ? 'history-item-clickable' : ''}`}
+                      style={{ animationDelay: `${idx * 50}ms` }}
                       onClick={() => userPlantId && onPlantTap?.(userPlantId)}
                     >
                       <div className="history-item-icon">

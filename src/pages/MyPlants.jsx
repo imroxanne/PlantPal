@@ -93,7 +93,7 @@ export default function MyPlants({ onAdd, onPlantTap, onShowToast, onTaskCountCh
 
       {!loading && !error && count > 0 && (
         <div className="plant-list">
-          {userPlants.map((up) => {
+          {userPlants.map((up, idx) => {
             const name = up.nickname || up.plant.common_name
             const status = getWateringStatus(up.next_watering_at, up.next_watering_window_end_at)
             const showWaterBtn = status.key === 'today' || status.key === 'overdue'
@@ -101,6 +101,7 @@ export default function MyPlants({ onAdd, onPlantTap, onShowToast, onTaskCountCh
               <div
                 key={up.id}
                 className={`plant-card ${status.key === 'overdue' ? 'plant-card-overdue' : ''}`}
+                style={{ animationDelay: `${idx * 60}ms` }}
                 onClick={() => onPlantTap(up.id)}
               >
                 <PlantAvatar name={name} imageUrl={up.plant.image_url} photoUrl={up.photo_url} size={64} />
@@ -114,17 +115,19 @@ export default function MyPlants({ onAdd, onPlantTap, onShowToast, onTaskCountCh
                     {status.text}
                   </div>
                 </div>
-                {showWaterBtn ? (
-                  <button
-                    className="plant-card-water-btn"
-                    onClick={(e) => handleQuickWater(e, up.id)}
-                    disabled={wateringId === up.id}
-                  >
-                    {wateringId === up.id ? '...' : '💧'}
-                  </button>
-                ) : (
-                  <span className="plant-card-status" style={{ background: status.color }} />
-                )}
+                <div className="plant-card-right">
+                  {showWaterBtn ? (
+                    <button
+                      className="plant-card-water-btn"
+                      onClick={(e) => handleQuickWater(e, up.id)}
+                      disabled={wateringId === up.id}
+                    >
+                      {wateringId === up.id ? '...' : '💧'}
+                    </button>
+                  ) : (
+                    <span className="plant-card-status" style={{ background: status.color }} />
+                  )}
+                </div>
               </div>
             )
           })}

@@ -1,10 +1,5 @@
 {
   "rewrites": [
-    { "source": "/api/user-plants/:id/water", "destination": "/api/user-plants/[id]/water" },
-    { "source": "/api/user-plants/:id/events", "destination": "/api/user-plants/[id]/events" },
-    { "source": "/api/user-plants/:id/archive", "destination": "/api/user-plants/[id]/archive" },
-    { "source": "/api/user-plants/:id/unarchive", "destination": "/api/user-plants/[id]/unarchive" },
-    { "source": "/api/user-plants/:id", "destination": "/api/user-plants/[id]" },
     { "source": "/api/admin/:slug*", "destination": "/api/admin?slug=:slug*" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }

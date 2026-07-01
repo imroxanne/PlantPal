@@ -66,9 +66,16 @@ export default function MyPlants({ onAdd, onPlantTap, onShowToast, onTaskCountCh
     <div className="my-plants">
       <div className="my-plants-header">
         <h1>Мои растения</h1>
-        {!loading && !error && count > 0 && (
-          <span className="my-plants-count">{count}</span>
-        )}
+        <div className="my-plants-header-right">
+          {!loading && !error && count > 0 && (
+            <span className="my-plants-count">{count}</span>
+          )}
+          {onArchive && (
+            <button className="my-plants-archive-btn" onClick={onArchive}>
+              📦
+            </button>
+          )}
+        </div>
       </div>
 
       {loading && <SkeletonCards />}
@@ -90,14 +97,6 @@ export default function MyPlants({ onAdd, onPlantTap, onShowToast, onTaskCountCh
           <p>PlantPal поможет не забыть о поливе и уходе за вашими зелёными друзьями</p>
           <button className="btn-primary" onClick={onAdd}>
             Добавить растение
-          </button>
-        </div>
-      )}
-
-      {!loading && !error && count > 0 && onArchive && (
-        <div className="my-plants-archive-link">
-          <button className="my-plants-archive-btn" onClick={onArchive}>
-            📦 Архив
           </button>
         </div>
       )}

@@ -29,28 +29,30 @@
   border-radius: var(--radius-full);
 }
 
-/* Archive link */
-
-.my-plants-archive-link {
-  padding: 8px 20px 0;
+.my-plants-header-right {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
 }
 
 .my-plants-archive-btn {
   background: none;
   border: none;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 16px;
   color: var(--text-tertiary);
   cursor: pointer;
-  font-family: inherit;
-  padding: 4px 0;
+  padding: 8px;
+  margin: -8px -8px -8px 0;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   -webkit-tap-highlight-color: transparent;
 }
 
 .my-plants-archive-btn:active {
-  color: var(--text-secondary);
+  opacity: 0.6;
 }
 
 /* Plant list */

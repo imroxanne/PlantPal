@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { api } from '../utils/api'
-import { isTelegramEnv } from '../utils/telegram'
+import { isTelegramEnv, hapticSuccess, hapticError } from '../utils/telegram'
 import { getWateringStatus, formatWateringInterval, formatNextWatering, formatDate, formatEventDate, EVENT_LABELS, EVENT_ICONS } from '../utils/status'
 import PlantAvatar from '../components/PlantAvatar'
 import './PlantDetail.css'
 
-export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToast, onTaskCountChange }) {
+export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToast, onTaskCountChange, onViewHistory }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -49,9 +49,11 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
       const d = await api.createEvent(userPlantId, type)
       setData(d)
       if (type === 'watering') onTaskCountChange?.()
+      hapticSuccess()
       const labels = { watering: 'Полив отмечен!', fertilizing: 'Подкормка отмечена!', repotting: 'Пересадка отмечена!', check: 'Проверка отмечена!' }
       onShowToast?.(labels[type] || 'Отмечено!')
     } catch (e) {
+      hapticError()
       onShowToast?.('Ошибка: ' + e.message, 'error')
     } finally {
       setActing(null)
@@ -66,8 +68,10 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
       setData(d)
       setNoteText('')
       setShowNoteInput(false)
+      hapticSuccess()
       onShowToast?.('Заметка добавлена!')
     } catch (e) {
+      hapticError()
       onShowToast?.('Ошибка: ' + e.message, 'error')
     } finally {
       setActing(null)
@@ -264,18 +268,25 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
               <p>Пока нет записей</p>
             </div>
           ) : (
-            <div className="pd-history-list">
-              {events.map((ev) => (
-                <div key={ev.id} className="pd-history-item">
-                  <span className="pd-history-icon">{EVENT_ICONS[ev.type] || '📋'}</span>
-                  <div className="pd-history-info">
-                    <span className="pd-history-type">{EVENT_LABELS[ev.type] || ev.type}</span>
-                    {ev.note && <span className="pd-history-note">{ev.note}</span>}
-                    <span className="pd-history-date">{formatEventDate(ev.created_at)}</span>
+            <>
+              <div className="pd-history-list">
+                {events.map((ev) => (
+                  <div key={ev.id} className="pd-history-item">
+                    <span className="pd-history-icon">{EVENT_ICONS[ev.type] || '📋'}</span>
+                    <div className="pd-history-info">
+                      <span className="pd-history-type">{EVENT_LABELS[ev.type] || ev.type}</span>
+                      {ev.note && <span className="pd-history-note">{ev.note}</span>}
+                      <span className="pd-history-date">{formatEventDate(ev.created_at)}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+              {events.length >= 5 && onViewHistory && (
+                <button className="pd-history-all" onClick={onViewHistory}>
+                  Вся история →
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>

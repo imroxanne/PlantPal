@@ -56,6 +56,8 @@ export default function App() {
       tg.BackButton.hide()
     }
 
+    if (screen === 'settings') return
+
     tg.BackButton.onClick(goBack)
     return () => tg.BackButton.offClick(goBack)
   }, [screen, goBack])
@@ -94,47 +96,48 @@ export default function App() {
 
   if (screen === 'search') {
     return (
-      <>
+      <div className="screen-enter" key="search">
         <SearchPlant
           onSelect={(plant) => navigateScreen('add-details', { plant })}
           onBack={goBack}
         />
         {toast && <Toast message={toast.message} type={toast.type} onClose={clearToast} />}
-      </>
+      </div>
     )
   }
 
   if (screen === 'add-details') {
     return (
-      <>
+      <div className="screen-enter" key="add-details">
         <AddPlantDetails
           plant={screenData?.plant}
           onAdded={onPlantAdded}
           onBack={goBack}
         />
         {toast && <Toast message={toast.message} type={toast.type} onClose={clearToast} />}
-      </>
+      </div>
     )
   }
 
   if (screen === 'plant-detail') {
     return (
-      <>
+      <div className="screen-enter" key="plant-detail">
         <PlantDetail
           userPlantId={screenData?.userPlantId}
           onBack={goBack}
           onSettings={(userPlant) => navigateScreen('settings', { userPlant })}
           onShowToast={showToast}
           onTaskCountChange={refreshTaskCount}
+          onViewHistory={() => { setScreen(null); setScreenData(null); setTab('history') }}
         />
         {toast && <Toast message={toast.message} type={toast.type} onClose={clearToast} />}
-      </>
+      </div>
     )
   }
 
   if (screen === 'settings') {
     return (
-      <>
+      <div className="screen-enter" key="settings">
         <PlantSettings
           userPlant={screenData?.userPlant}
           onSaved={(updated) => {
@@ -152,7 +155,7 @@ export default function App() {
           onShowToast={showToast}
         />
         {toast && <Toast message={toast.message} type={toast.type} onClose={clearToast} />}
-      </>
+      </div>
     )
   }
 

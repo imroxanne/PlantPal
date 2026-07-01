@@ -108,12 +108,13 @@ export default function Tasks({ onPlantTap, onShowToast, onTaskCountChange }) {
                   <span className="tasks-group-count">{items.length}</span>
                 </div>
                 <div className="tasks-group-list">
-                  {items.map((up) => {
+                  {items.map((up, idx) => {
                     const name = up.nickname || up.plant.common_name
                     return (
                       <div
                         key={up.id}
                         className={`task-card ${groupKey === 'overdue' ? 'task-card-overdue' : ''}`}
+                        style={{ animationDelay: `${idx * 60}ms` }}
                         onClick={() => onPlantTap(up.id)}
                       >
                         <PlantAvatar name={name} imageUrl={up.plant.image_url} size={40} />

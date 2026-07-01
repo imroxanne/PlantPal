@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { api } from '../utils/api'
 import { isTelegramEnv } from '../utils/telegram'
 import { getWateringStatus, formatWateringInterval, formatNextWatering, formatDate, formatEventDate, EVENT_LABELS, EVENT_ICONS } from '../utils/status'
@@ -13,6 +13,18 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
   const [showMore, setShowMore] = useState(false)
   const [noteText, setNoteText] = useState('')
   const [showNoteInput, setShowNoteInput] = useState(false)
+  const moreMenuRef = useRef(null)
+
+  useEffect(() => {
+    if (!showMore) return
+    const handleOutsideClick = (e) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target)) {
+        setShowMore(false)
+      }
+    }
+    document.addEventListener('pointerdown', handleOutsideClick)
+    return () => document.removeEventListener('pointerdown', handleOutsideClick)
+  }, [showMore])
 
   const load = useCallback(() => {
     setLoading(true)
@@ -182,13 +194,13 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
             className="pd-action-btn"
             onClick={() => setShowMore(!showMore)}
           >
-            <span className="pd-action-icon">...</span>
+            <span className="pd-action-icon">⋯</span>
             <span>Ещё</span>
           </button>
         </div>
 
         {showMore && (
-          <div className="pd-more-menu">
+          <div className="pd-more-menu" ref={moreMenuRef}>
             <button className="pd-more-item" onClick={() => handleAction('check')}>
               <span>🔍</span> Проверил растение
             </button>

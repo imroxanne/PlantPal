@@ -24,7 +24,7 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--danger);
-  background: #F5E4E2;
+  background: var(--danger-bg);
   padding: 2px 10px;
   border-radius: var(--radius-full);
 }
@@ -79,7 +79,7 @@
 }
 
 .task-card-overdue {
-  outline: 1.5px solid #F0D5D1;
+  outline: 1.5px solid var(--danger-light);
 }
 
 .task-card .plant-avatar-fallback {

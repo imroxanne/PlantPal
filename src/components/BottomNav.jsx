@@ -2,7 +2,7 @@ import './BottomNav.css'
 
 const TABS = [
   { id: 'plants', icon: '🌿', label: 'Растения' },
-  { id: 'tasks', icon: '✓', label: 'Задачи' },
+  { id: 'tasks', icon: '✔️', label: 'Задачи' },
   { id: 'add', icon: '+', label: 'Добавить', isCenter: true },
   { id: 'history', icon: '📋', label: 'История' },
 ]

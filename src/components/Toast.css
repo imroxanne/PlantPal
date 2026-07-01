@@ -3,7 +3,7 @@
   bottom: calc(80px + var(--safe-bottom));
   left: 50%;
   transform: translateX(-50%);
-  background: #2C2C2C;
+  background: var(--text-primary);
   color: #fff;
   padding: 11px 20px;
   border-radius: var(--radius-md);

@@ -58,7 +58,7 @@
 }
 
 .plant-card-overdue {
-  outline: 1.5px solid #F0D5D1;
+  outline: 1.5px solid var(--danger-light);
 }
 
 
@@ -103,6 +103,15 @@
   flex-shrink: 0;
 }
 
+.plant-card-right {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .plant-card-status {
   width: 10px;
   height: 10px;
@@ -114,7 +123,7 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: #E5EEF2;
+  background: var(--water-bg);
   border: none;
   font-size: 20px;
   display: flex;

@@ -27,6 +27,8 @@
 - Telegram BackButton интеграция
 - Toast-уведомления
 - Предупреждение о несохранённых изменениях
+- Telegram-напоминания о поливе (Vercel Cron + Bot API)
+- Настройки уведомлений (включение, выбор времени)
 
 ## Структура проекта
 
@@ -36,12 +38,17 @@ PlantPal/
 │   ├── _lib/
 │   │   ├── auth.js               # HMAC-проверка initData
 │   │   ├── supabase.js           # Клиент Supabase
-│   │   └── watering.js           # Расчёт интервалов полива
+│   │   ├── watering.js           # Расчёт интервалов полива
+│   │   ├── tasks.js              # Общая логика задач
+│   │   └── telegramBot.js        # Отправка сообщений через Bot API
 │   ├── home.js                   # GET /api/home
 │   ├── health.js                 # GET /api/health
 │   ├── plants.js                 # GET /api/plants
 │   ├── tasks.js                  # GET /api/tasks
 │   ├── care-events.js            # GET/DELETE /api/care-events
+│   ├── settings.js               # GET/PATCH /api/settings
+│   ├── cron/
+│   │   └── send-reminders.js     # Cron: отправка напоминаний
 │   ├── user-plants.js            # GET/POST /api/user-plants
 │   ├── user-plants/[id].js       # GET/PATCH /api/user-plants/:id
 │   └── user-plants/[id]/
@@ -61,7 +68,8 @@ PlantPal/
 │   │   ├── PlantSettings.jsx     # Настройки растения
 │   │   ├── Tasks.jsx             # Задачи по поливу
 │   │   ├── History.jsx           # История ухода
-│   │   └── ArchivedPlants.jsx    # Архив растений
+│   │   ├── ArchivedPlants.jsx    # Архив растений
+│   │   └── Settings.jsx          # Настройки уведомлений
 │   ├── components/
 │   │   ├── BottomNav.jsx         # Нижняя навигация
 │   │   ├── PlantAvatar.jsx       # Аватар растения (image + fallback)
@@ -126,5 +134,5 @@ npm run dev
 - [x] Advanced UX Polish (haptic, transitions, unsaved warning)
 - [x] Bugfix + History Cleanup
 - [x] MVP Stabilization (unarchive, plant history, search fix)
-- [ ] Настройки пользователя + уведомления через бота
+- [x] Настройки пользователя + уведомления через бота
 - [ ] AI pipeline

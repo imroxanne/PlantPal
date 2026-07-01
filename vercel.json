@@ -8,5 +8,11 @@
     { "source": "/api/admin/:slug*", "destination": "/api/admin?slug=:slug*" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/send-reminders",
+      "schedule": "*/30 * * * *"
+    }
   ]
 }

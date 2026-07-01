@@ -21,7 +21,7 @@ function SkeletonCards() {
   )
 }
 
-export default function MyPlants({ onAdd, onPlantTap, onShowToast, onTaskCountChange }) {
+export default function MyPlants({ onAdd, onPlantTap, onShowToast, onTaskCountChange, onArchive }) {
   const [userPlants, setUserPlants] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -90,6 +90,14 @@ export default function MyPlants({ onAdd, onPlantTap, onShowToast, onTaskCountCh
           <p>PlantPal поможет не забыть о поливе и уходе за вашими зелёными друзьями</p>
           <button className="btn-primary" onClick={onAdd}>
             Добавить растение
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && count > 0 && onArchive && (
+        <div className="my-plants-archive-link">
+          <button className="my-plants-archive-btn" onClick={onArchive}>
+            📦 Архив
           </button>
         </div>
       )}

@@ -10,6 +10,7 @@ import PlantDetail from './pages/PlantDetail'
 import PlantSettings from './pages/PlantSettings'
 import Tasks from './pages/Tasks'
 import History from './pages/History'
+import ArchivedPlants from './pages/ArchivedPlants'
 
 export default function App() {
   const [tab, setTab] = useState('plants')
@@ -39,6 +40,14 @@ export default function App() {
     } else if (screen === 'settings') {
       setScreen('plant-detail')
       setScreenData((prev) => ({ userPlantId: prev?.userPlant?.id }))
+    } else if (screen === 'plant-history') {
+      setScreen('plant-detail')
+      setScreenData((prev) => ({ userPlantId: prev?.userPlantId }))
+    } else if (screen === 'archived') {
+      setScreen(null)
+      setScreenData(null)
+      setTab('plants')
+      setRefreshKey((k) => k + 1)
     } else if (screen) {
       setScreen(null)
       setScreenData(null)
@@ -128,7 +137,35 @@ export default function App() {
           onSettings={(userPlant) => navigateScreen('settings', { userPlant })}
           onShowToast={showToast}
           onTaskCountChange={refreshTaskCount}
-          onViewHistory={() => { setScreen(null); setScreenData(null); setTab('history') }}
+          onViewHistory={(plantId, plantName) => navigateScreen('plant-history', { userPlantId: plantId, plantName })}
+        />
+        {toast && <Toast message={toast.message} type={toast.type} onClose={clearToast} />}
+      </div>
+    )
+  }
+
+  if (screen === 'plant-history') {
+    return (
+      <div className="screen-enter" key="plant-history">
+        <History
+          userPlantId={screenData?.userPlantId}
+          plantName={screenData?.plantName}
+          onPlantTap={(userPlantId) => navigateScreen('plant-detail', { userPlantId })}
+          onShowToast={showToast}
+          onBack={goBack}
+        />
+        {toast && <Toast message={toast.message} type={toast.type} onClose={clearToast} />}
+      </div>
+    )
+  }
+
+  if (screen === 'archived') {
+    return (
+      <div className="screen-enter" key="archived">
+        <ArchivedPlants
+          onBack={goBack}
+          onShowToast={showToast}
+          onRestored={refreshTaskCount}
         />
         {toast && <Toast message={toast.message} type={toast.type} onClose={clearToast} />}
       </div>
@@ -168,6 +205,7 @@ export default function App() {
           onPlantTap={(userPlantId) => navigateScreen('plant-detail', { userPlantId })}
           onShowToast={showToast}
           onTaskCountChange={refreshTaskCount}
+          onArchive={() => navigateScreen('archived')}
         />
       )}
       {tab === 'tasks' && (

@@ -66,6 +66,11 @@
   opacity: 0.85;
 }
 
+.confirm-btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .confirm-btn-cancel {
   display: block;
   width: 100%;

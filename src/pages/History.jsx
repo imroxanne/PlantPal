@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
 import { EVENT_LABELS, EVENT_ICONS, formatEventDate } from '../utils/status'
-import { hapticSuccess, hapticError, hapticSelection } from '../utils/telegram'
+import { isTelegramEnv, hapticSuccess, hapticError, hapticSelection } from '../utils/telegram'
 import ConfirmDialog from '../components/ConfirmDialog'
 import './History.css'
 
@@ -39,7 +39,7 @@ const PERIODS = [
   { id: 'all', label: 'Всю историю' },
 ]
 
-export default function History({ onPlantTap, onShowToast }) {
+export default function History({ onPlantTap, onShowToast, userPlantId, plantName, onBack }) {
   const [events, setEvents] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -47,10 +47,12 @@ export default function History({ onPlantTap, onShowToast }) {
   const [selectedPeriod, setSelectedPeriod] = useState(null)
   const [deleting, setDeleting] = useState(false)
 
+  const isFiltered = !!userPlantId
+
   const load = () => {
     setLoading(true)
     setError(null)
-    api.getCareEvents()
+    api.getCareEvents(userPlantId)
       .then((d) => setEvents(d.care_events))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
@@ -84,8 +86,11 @@ export default function History({ onPlantTap, onShowToast }) {
   return (
     <div className="history-page">
       <div className="history-header">
-        <h1>История</h1>
-        {!loading && !error && events?.length > 0 && (
+        {isFiltered && !isTelegramEnv() && onBack && (
+          <button className="header-back-btn" onClick={onBack}>←</button>
+        )}
+        <h1>{isFiltered && plantName ? `История: ${plantName}` : 'История'}</h1>
+        {!loading && !error && events?.length > 0 && !isFiltered && (
           <button
             className="history-cleanup-btn"
             onClick={() => { setShowCleanup(true); setSelectedPeriod(null) }}

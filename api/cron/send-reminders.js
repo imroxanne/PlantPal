@@ -6,11 +6,10 @@ const DAY_MS = 86400000
 
 function getUserLocalDate(timezone) {
   try {
-    const str = new Intl.DateTimeFormat('en-CA', {
+    return new Intl.DateTimeFormat('en-CA', {
       timeZone: timezone,
       year: 'numeric', month: '2-digit', day: '2-digit',
     }).format(new Date())
-    return str
   } catch {
     return new Intl.DateTimeFormat('en-CA', {
       timeZone: 'Europe/Moscow',
@@ -19,43 +18,18 @@ function getUserLocalDate(timezone) {
   }
 }
 
-function getUserLocalTime(timezone) {
-  try {
-    return new Intl.DateTimeFormat('en-GB', {
-      timeZone: timezone,
-      hour: '2-digit', minute: '2-digit', hour12: false,
-    }).format(new Date())
-  } catch {
-    return new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'Europe/Moscow',
-      hour: '2-digit', minute: '2-digit', hour12: false,
-    }).format(new Date())
-  }
-}
-
-function isTimeToSend(notificationTime, timezone) {
-  const currentTime = getUserLocalTime(timezone)
-  const [curH, curM] = currentTime.split(':').map(Number)
-  const [notH, notM] = notificationTime.split(':').map(Number)
-  const curMinutes = curH * 60 + curM
-  const notMinutes = notH * 60 + notM
-  return curMinutes >= notMinutes && curMinutes < notMinutes + 30
-}
-
 function alreadySentToday(lastSentAt, timezone) {
   if (!lastSentAt) return false
   const todayStr = getUserLocalDate(timezone)
-  const sentStr = (() => {
-    try {
-      return new Intl.DateTimeFormat('en-CA', {
-        timeZone: timezone,
-        year: 'numeric', month: '2-digit', day: '2-digit',
-      }).format(new Date(lastSentAt))
-    } catch {
-      return ''
-    }
-  })()
-  return sentStr === todayStr
+  try {
+    const sentStr = new Intl.DateTimeFormat('en-CA', {
+      timeZone: timezone,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+    }).format(new Date(lastSentAt))
+    return sentStr === todayStr
+  } catch {
+    return false
+  }
 }
 
 function formatReminderDate(iso) {
@@ -117,7 +91,6 @@ export default async function handler(req, res) {
     messages_sent: 0,
     skipped_no_tasks: 0,
     skipped_already_sent: 0,
-    skipped_not_time: 0,
     errors: 0,
   }
 
@@ -134,11 +107,6 @@ export default async function handler(req, res) {
     for (const user of users || []) {
       try {
         const tz = user.timezone || 'Europe/Moscow'
-
-        if (!isTimeToSend(user.notification_time, tz)) {
-          summary.skipped_not_time++
-          continue
-        }
 
         if (alreadySentToday(user.last_notification_sent_at, tz)) {
           summary.skipped_already_sent++

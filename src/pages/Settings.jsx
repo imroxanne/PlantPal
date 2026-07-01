@@ -95,7 +95,7 @@ export default function Settings({ onBack, onShowToast }) {
             </div>
 
             <div className="settings-hint">
-              PlantPal пришлёт сообщение в Telegram, если в это время есть растения, которые пора полить.
+              PlantPal пришлёт сообщение в Telegram раз в день, если есть растения, которые пора полить. Точное время может отличаться от выбранного.
             </div>
 
             <div className="settings-save-area">

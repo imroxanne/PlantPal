@@ -3,6 +3,7 @@ import { requireAuth } from './_lib/auth.js'
 export default async function handler(req, res) {
   try {
     const user = await requireAuth(req)
+    res.setHeader('Cache-Control', 'no-store')
     res.json({
       user: {
         id: user.id,

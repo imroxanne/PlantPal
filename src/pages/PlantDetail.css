@@ -39,7 +39,7 @@
 }
 
 .pd-body {
-  padding: 0 20px 32px;
+  padding: 0 20px calc(32px + var(--safe-bottom));
 }
 
 /* Hero section */

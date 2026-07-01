@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { api } from '../utils/api'
+import { isTelegramEnv } from '../utils/telegram'
 import ConfirmDialog from '../components/ConfirmDialog'
 import './PlantSettings.css'
 
@@ -52,6 +53,9 @@ export default function PlantSettings({ userPlant, onSaved, onArchived, onBack, 
   return (
     <div className="plant-settings">
       <div className="ps-header">
+        {!isTelegramEnv() && onBack && (
+          <button className="header-back-btn" onClick={onBack}>←</button>
+        )}
         <h1>Параметры</h1>
       </div>
 

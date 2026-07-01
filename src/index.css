@@ -140,3 +140,19 @@ body {
   background-size: 200px 100%;
   animation: shimmer 1.5s infinite linear;
 }
+
+.header-back-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 4px 8px 4px 0;
+  margin-right: 4px;
+  min-width: 32px;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}

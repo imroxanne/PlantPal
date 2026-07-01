@@ -48,6 +48,15 @@
   animation: fadeUp 300ms ease-out both;
 }
 
+.history-item-clickable {
+  cursor: pointer;
+  transition: background 100ms;
+}
+
+.history-item-clickable:active {
+  background: var(--primary-light);
+}
+
 .history-item:last-child {
   border-bottom: none;
 }

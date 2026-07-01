@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { initTelegram, getTelegramWebApp } from './utils/telegram'
+import { initTelegram, getTelegramWebApp, isTelegramEnv } from './utils/telegram'
 import { api } from './utils/api'
 import BottomNav from './components/BottomNav'
 import Toast from './components/Toast'
@@ -19,8 +19,7 @@ export default function App() {
   const [taskCount, setTaskCount] = useState(0)
   const [toast, setToast] = useState(null)
 
-  useEffect(() => {
-    initTelegram()
+  const refreshTaskCount = useCallback(() => {
     api.getTasks()
       .then((d) => {
         const total = Object.values(d.tasks).reduce((s, g) => s + g.length, 0)
@@ -28,6 +27,23 @@ export default function App() {
       })
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    initTelegram()
+    refreshTaskCount()
+  }, [refreshTaskCount])
+
+  const goBack = useCallback(() => {
+    if (screen === 'add-details') {
+      setScreen('search')
+    } else if (screen === 'settings') {
+      setScreen('plant-detail')
+    } else if (screen) {
+      setScreen(null)
+      setScreenData(null)
+      setRefreshKey((k) => k + 1)
+    }
+  }, [screen])
 
   useEffect(() => {
     const tg = getTelegramWebApp()
@@ -39,20 +55,9 @@ export default function App() {
       tg.BackButton.hide()
     }
 
-    const onBack = () => {
-      if (screen === 'add-details') {
-        setScreen('search')
-      } else if (screen === 'settings') {
-        setScreen('plant-detail')
-      } else if (screen) {
-        setScreen(null)
-        setScreenData(null)
-        setRefreshKey((k) => k + 1)
-      }
-    }
-    tg.BackButton.onClick(onBack)
-    return () => tg.BackButton.offClick(onBack)
-  }, [screen])
+    tg.BackButton.onClick(goBack)
+    return () => tg.BackButton.offClick(goBack)
+  }, [screen, goBack])
 
   const showToast = useCallback((message, type) => {
     setToast({ message, type: type || 'success' })
@@ -70,7 +75,8 @@ export default function App() {
     setScreen(null)
     setScreenData(null)
     setTab('plants')
-  }, [])
+    refreshTaskCount()
+  }, [refreshTaskCount])
 
   const handleTab = useCallback((id) => {
     if (id === 'add') {
@@ -90,7 +96,7 @@ export default function App() {
       <>
         <SearchPlant
           onSelect={(plant) => navigateScreen('add-details', { plant })}
-          onBack={() => { setScreen(null); setScreenData(null) }}
+          onBack={goBack}
         />
         {toast && <Toast message={toast.message} type={toast.type} onClose={clearToast} />}
       </>
@@ -103,7 +109,7 @@ export default function App() {
         <AddPlantDetails
           plant={screenData?.plant}
           onAdded={onPlantAdded}
-          onBack={() => setScreen('search')}
+          onBack={goBack}
         />
         {toast && <Toast message={toast.message} type={toast.type} onClose={clearToast} />}
       </>
@@ -115,13 +121,10 @@ export default function App() {
       <>
         <PlantDetail
           userPlantId={screenData?.userPlantId}
-          onBack={() => {
-            setScreen(null)
-            setScreenData(null)
-            setRefreshKey((k) => k + 1)
-          }}
+          onBack={goBack}
           onSettings={(userPlant) => navigateScreen('settings', { userPlant })}
           onShowToast={showToast}
+          onTaskCountChange={refreshTaskCount}
         />
         {toast && <Toast message={toast.message} type={toast.type} onClose={clearToast} />}
       </>
@@ -144,7 +147,7 @@ export default function App() {
             setRefreshKey((k) => k + 1)
             showToast('Растение архивировано')
           }}
-          onBack={() => setScreen('plant-detail')}
+          onBack={goBack}
           onShowToast={showToast}
         />
         {toast && <Toast message={toast.message} type={toast.type} onClose={clearToast} />}
@@ -160,6 +163,7 @@ export default function App() {
           onAdd={() => setScreen('search')}
           onPlantTap={(userPlantId) => navigateScreen('plant-detail', { userPlantId })}
           onShowToast={showToast}
+          onTaskCountChange={refreshTaskCount}
         />
       )}
       {tab === 'tasks' && (
@@ -167,10 +171,14 @@ export default function App() {
           key={refreshKey}
           onPlantTap={(userPlantId) => navigateScreen('plant-detail', { userPlantId })}
           onShowToast={showToast}
+          onTaskCountChange={refreshTaskCount}
         />
       )}
       {tab === 'history' && (
-        <History key={refreshKey} />
+        <History
+          key={refreshKey}
+          onPlantTap={(userPlantId) => navigateScreen('plant-detail', { userPlantId })}
+        />
       )}
       {showBottomNav && (
         <BottomNav active={tab} taskCount={taskCount} onTab={handleTab} />

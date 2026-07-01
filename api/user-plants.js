@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const { data, error } = await sb
         .from('user_plants')
-        .select('id, nickname, last_watered, custom_watering_interval_days, photo_url, created_at, plant:plants(id, common_name, latin_name, watering_interval_days, image_url)')
+        .select('id, nickname, last_watered, next_watering_at, custom_watering_interval_days, photo_url, created_at, plant:plants(id, common_name, latin_name, watering_interval_days, image_url)')
         .eq('user_id', user.id)
         .eq('is_archived', false)
         .order('created_at', { ascending: false })
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
 
       const { data: plant, error: plantErr } = await sb
         .from('plants')
-        .select('id')
+        .select('id, watering_interval_days')
         .eq('id', plant_id)
         .eq('status', 'published')
         .maybeSingle()
@@ -39,14 +39,20 @@ export default async function handler(req, res) {
         return
       }
 
+      const now = new Date()
+      const nextWatering = plant.watering_interval_days
+        ? new Date(now.getTime() + plant.watering_interval_days * 24 * 60 * 60 * 1000).toISOString()
+        : null
+
       const { data: created, error: insertErr } = await sb
         .from('user_plants')
         .insert({
           user_id: user.id,
           plant_id,
           nickname: nickname?.trim() || null,
+          next_watering_at: nextWatering,
         })
-        .select('id, nickname, photo_url, created_at, plant:plants(id, common_name, latin_name, watering_interval_days, image_url)')
+        .select('id, nickname, next_watering_at, photo_url, created_at, plant:plants(id, common_name, latin_name, watering_interval_days, image_url)')
         .single()
 
       if (insertErr) throw new Error(`Database error: ${insertErr.message}`)

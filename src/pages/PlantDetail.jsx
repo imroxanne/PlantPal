@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '../utils/api'
+import { isTelegramEnv } from '../utils/telegram'
 import { getWateringStatus, formatDate, formatEventDate, EVENT_LABELS, EVENT_ICONS } from '../utils/status'
 import PlantAvatar from '../components/PlantAvatar'
 import './PlantDetail.css'
 
-export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToast }) {
+export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToast, onTaskCountChange }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -35,6 +36,7 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
     try {
       const d = await api.createEvent(userPlantId, type)
       setData(d)
+      if (type === 'watering') onTaskCountChange?.()
       const labels = { watering: 'Полив отмечен!', fertilizing: 'Подкормка отмечена!', repotting: 'Пересадка отмечена!', check: 'Проверка отмечена!' }
       onShowToast?.(labels[type] || 'Отмечено!')
     } catch (e) {
@@ -109,6 +111,9 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
   return (
     <div className="plant-detail">
       <div className="pd-header">
+        {!isTelegramEnv() && onBack && (
+          <button className="header-back-btn" onClick={onBack}>←</button>
+        )}
         <h1>{name}</h1>
         <button className="pd-settings-btn" onClick={() => onSettings(up)}>
           ⚙

@@ -14,14 +14,24 @@ async function request(path, options = {}) {
     headers['x-dev-telegram-id'] = DEV_TELEGRAM_ID
   }
 
-  const res = await fetch('/api' + path, {
+  const url = '/api' + path
+  const res = await fetch(url, {
     ...options,
     headers,
   })
 
+  const contentType = res.headers.get('content-type') || ''
+  if (!contentType.includes('application/json')) {
+    throw new Error(`API returned non-JSON response (${res.status} ${url})`)
+  }
+
   const data = await res.json()
   if (!res.ok) throw new Error(data.error || 'Request failed')
   return data
+}
+
+function plantUrl(id, action) {
+  return '/user-plant?id=' + id + (action ? '&action=' + action : '')
 }
 
 export const api = {
@@ -30,24 +40,24 @@ export const api = {
   getPlants: () => request('/plants'),
   getUserPlants: () => request('/user-plants'),
   getArchivedPlants: () => request('/user-plants?archived=true'),
-  unarchivePlant: (id) =>
-    request('/user-plants/' + id + '/unarchive', { method: 'POST' }),
   addUserPlant: (plantId, nickname) =>
     request('/user-plants', {
       method: 'POST',
       body: JSON.stringify({ plant_id: plantId, nickname: nickname || undefined }),
     }),
-  getUserPlant: (id) => request('/user-plants/' + id),
-  waterPlant: (id) => request('/user-plants/' + id + '/water', { method: 'POST' }),
+  getUserPlant: (id) => request(plantUrl(id)),
+  waterPlant: (id) => request(plantUrl(id, 'water'), { method: 'POST' }),
   updateUserPlant: (id, fields) =>
-    request('/user-plants/' + id, {
+    request(plantUrl(id), {
       method: 'PATCH',
       body: JSON.stringify(fields),
     }),
   archivePlant: (id) =>
-    request('/user-plants/' + id + '/archive', { method: 'POST' }),
+    request(plantUrl(id, 'archive'), { method: 'POST' }),
+  unarchivePlant: (id) =>
+    request(plantUrl(id, 'unarchive'), { method: 'POST' }),
   createEvent: (id, type, note) =>
-    request('/user-plants/' + id + '/events', {
+    request(plantUrl(id, 'events'), {
       method: 'POST',
       body: JSON.stringify({ type, note: note || undefined }),
     }),

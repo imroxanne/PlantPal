@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { api } from '../utils/api'
+import { isTelegramEnv } from '../utils/telegram'
+import PlantAvatar from '../components/PlantAvatar'
 import './SearchPlant.css'
 
 const POPULAR = ['Монстера', 'Фикус', 'Алоэ', 'Кактус', 'Потос']
@@ -46,6 +48,9 @@ export default function SearchPlant({ onSelect, onBack }) {
   return (
     <div className="search-plant">
       <div className="search-header">
+        {!isTelegramEnv() && onBack && (
+          <button className="header-back-btn" onClick={onBack}>←</button>
+        )}
         <h1>Добавить растение</h1>
       </div>
 
@@ -95,12 +100,15 @@ export default function SearchPlant({ onSelect, onBack }) {
                 className="search-result-item"
                 onClick={() => onSelect(plant)}
               >
-                <div className="search-result-name">{plant.common_name}</div>
-                {plant.latin_name && (
-                  <div className="search-result-latin">{plant.latin_name}</div>
-                )}
-                <div className="search-result-meta">
-                  Полив: каждые {plant.watering_interval_days} дн.
+                <PlantAvatar name={plant.common_name} imageUrl={plant.image_url} size={40} />
+                <div className="search-result-info">
+                  <div className="search-result-name">{plant.common_name}</div>
+                  {plant.latin_name && (
+                    <div className="search-result-latin">{plant.latin_name}</div>
+                  )}
+                  <div className="search-result-meta">
+                    Полив: каждые {plant.watering_interval_days} дн.
+                  </div>
                 </div>
               </div>
             ))}

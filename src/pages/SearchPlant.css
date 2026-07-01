@@ -7,6 +7,8 @@
   padding: 16px 20px 12px;
   background: var(--bg-card);
   border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
 }
 
 .search-header h1 {
@@ -147,12 +149,20 @@
 }
 
 .search-result-item {
-  padding: 16px 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
   border-bottom: 1px solid var(--border-light);
   cursor: pointer;
   transition: background 100ms;
   border-radius: var(--radius-sm);
   min-height: 48px;
+}
+
+.search-result-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .search-result-item:active {

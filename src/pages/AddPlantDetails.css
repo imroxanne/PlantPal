@@ -7,6 +7,8 @@
   padding: 16px 20px 12px;
   background: var(--bg-card);
   border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
 }
 
 .add-details-header h1 {
@@ -23,15 +25,9 @@
   animation: fadeUp 300ms ease-out;
 }
 
-.add-details-icon {
-  width: 88px;
-  height: 88px;
+.add-details-body .plant-avatar,
+.add-details-body .plant-avatar-fallback {
   border-radius: 50%;
-  background: var(--primary-light);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 40px;
 }
 
 .add-details-plant-name {

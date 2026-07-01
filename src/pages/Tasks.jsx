@@ -26,7 +26,7 @@ function SkeletonTasks() {
   )
 }
 
-export default function Tasks({ onPlantTap, onShowToast }) {
+export default function Tasks({ onPlantTap, onShowToast, onTaskCountChange }) {
   const [tasks, setTasks] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -43,7 +43,7 @@ export default function Tasks({ onPlantTap, onShowToast }) {
     e.stopPropagation()
     setCompleting(plantId)
     try {
-      await api.waterPlant(plantId)
+      await api.createEvent(plantId, 'watering')
       setTasks((prev) => {
         const next = {}
         for (const [key, items] of Object.entries(prev)) {
@@ -51,6 +51,7 @@ export default function Tasks({ onPlantTap, onShowToast }) {
         }
         return next
       })
+      onTaskCountChange?.()
       onShowToast?.('Полив отмечен!')
     } catch (err) {
       onShowToast?.('Ошибка: ' + err.message, 'error')

@@ -30,7 +30,7 @@ function groupByDate(events) {
   return groups
 }
 
-export default function History() {
+export default function History({ onPlantTap }) {
   const [events, setEvents] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -89,8 +89,13 @@ export default function History() {
                 {group.events.map((ev) => {
                   const plantName =
                     ev.user_plant?.nickname || ev.user_plant?.plant?.common_name || '—'
+                  const userPlantId = ev.user_plant?.id
                   return (
-                    <div key={ev.id} className="history-item">
+                    <div
+                      key={ev.id}
+                      className={`history-item ${userPlantId ? 'history-item-clickable' : ''}`}
+                      onClick={() => userPlantId && onPlantTap?.(userPlantId)}
+                    >
                       <div className="history-item-icon">
                         {EVENT_ICONS[ev.type] || '📋'}
                       </div>

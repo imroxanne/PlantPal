@@ -20,7 +20,7 @@ function SkeletonCards() {
   )
 }
 
-export default function MyPlants({ onAdd, onPlantTap, onShowToast }) {
+export default function MyPlants({ onAdd, onPlantTap, onShowToast, onTaskCountChange }) {
   const [userPlants, setUserPlants] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -38,7 +38,7 @@ export default function MyPlants({ onAdd, onPlantTap, onShowToast }) {
     e.stopPropagation()
     setWateringId(plantId)
     try {
-      const res = await api.waterPlant(plantId)
+      const res = await api.createEvent(plantId, 'watering')
       setUserPlants((prev) =>
         prev.map((p) =>
           p.id === plantId
@@ -46,6 +46,7 @@ export default function MyPlants({ onAdd, onPlantTap, onShowToast }) {
             : p
         )
       )
+      onTaskCountChange?.()
       onShowToast?.('Полив отмечен!')
     } catch (err) {
       onShowToast?.('Ошибка: ' + err.message, 'error')

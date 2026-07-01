@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { api } from '../utils/api'
+import { isTelegramEnv } from '../utils/telegram'
+import PlantAvatar from '../components/PlantAvatar'
 import './AddPlantDetails.css'
 
 export default function AddPlantDetails({ plant, onAdded, onBack }) {
@@ -25,11 +27,14 @@ export default function AddPlantDetails({ plant, onAdded, onBack }) {
   return (
     <div className="add-details">
       <div className="add-details-header">
+        {!isTelegramEnv() && onBack && (
+          <button className="header-back-btn" onClick={onBack}>←</button>
+        )}
         <h1>Новое растение</h1>
       </div>
 
       <div className="add-details-body">
-        <div className="add-details-icon">🌿</div>
+        <PlantAvatar name={plant.common_name} imageUrl={plant.image_url} size={88} />
 
         <div className="add-details-plant-name">{plant.common_name}</div>
         {plant.latin_name && (

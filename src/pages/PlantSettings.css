@@ -18,7 +18,7 @@
 }
 
 .ps-body {
-  padding: 16px 20px 32px;
+  padding: 16px 20px calc(32px + var(--safe-bottom));
 }
 
 .ps-section-label {
@@ -74,6 +74,16 @@
   color: var(--text-tertiary);
 }
 
+.ps-input-number {
+  -moz-appearance: textfield;
+}
+
+.ps-input-number::-webkit-inner-spin-button,
+.ps-input-number::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .ps-textarea {
   display: block;
   width: 100%;
@@ -96,6 +106,83 @@
   font-size: 14px;
   color: var(--text-primary);
 }
+
+/* Mode selector chips */
+
+.ps-mode-chips {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.ps-chip {
+  flex: 1;
+  padding: 8px 4px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: center;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 100ms, border-color 100ms, color 100ms;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ps-chip-active {
+  background: var(--primary-light);
+  border-color: var(--primary);
+  color: var(--primary-dark);
+}
+
+.ps-chip:active {
+  transform: scale(0.97);
+}
+
+/* Range inputs */
+
+.ps-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ps-range-input {
+  flex: 1;
+  text-align: center;
+  padding: 8px !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  background: var(--bg) !important;
+  min-height: 40px;
+}
+
+.ps-range-input:focus {
+  border-color: var(--primary) !important;
+}
+
+.ps-range-sep {
+  font-size: 16px;
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+.ps-range-hint {
+  display: block;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+/* Actions */
 
 .ps-save-btn {
   margin-top: 24px;

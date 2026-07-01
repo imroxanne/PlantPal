@@ -8,25 +8,70 @@ export default function PlantSettings({ userPlant, onSaved, onArchived, onBack, 
   const plant = userPlant.plant
   const [nickname, setNickname] = useState(userPlant.nickname || '')
   const [location, setLocation] = useState(userPlant.location || '')
-  const [customInterval, setCustomInterval] = useState(
-    userPlant.custom_watering_interval_days?.toString() || ''
-  )
   const [notes, setNotes] = useState(userPlant.notes || '')
   const [saving, setSaving] = useState(false)
   const [showArchiveDialog, setShowArchiveDialog] = useState(false)
   const [archiving, setArchiving] = useState(false)
 
+  const hasRange = !!(userPlant.custom_watering_interval_min_days && userPlant.custom_watering_interval_max_days)
+  const hasExact = !!(userPlant.custom_watering_interval_days && !hasRange)
+
+  const initialMode = hasRange ? 'range' : hasExact ? 'exact' : 'default'
+  const [intervalMode, setIntervalMode] = useState(initialMode)
+  const [exactDays, setExactDays] = useState(
+    hasExact ? userPlant.custom_watering_interval_days.toString() : ''
+  )
+  const [minDays, setMinDays] = useState(
+    hasRange ? userPlant.custom_watering_interval_min_days.toString() : ''
+  )
+  const [maxDays, setMaxDays] = useState(
+    hasRange ? userPlant.custom_watering_interval_max_days.toString() : ''
+  )
+
   const displayName = userPlant.nickname || plant.common_name
 
   const handleSave = async () => {
+    const body = {
+      nickname: nickname.trim() || null,
+      location: location.trim() || null,
+      notes: notes.trim() || null,
+    }
+
+    if (intervalMode === 'exact') {
+      const val = Number(exactDays)
+      if (!exactDays || val < 1 || val > 365) {
+        onShowToast?.('Укажите интервал от 1 до 365 дней', 'error')
+        return
+      }
+      body.custom_watering_interval_days = val
+      body.custom_watering_interval_min_days = null
+      body.custom_watering_interval_max_days = null
+    } else if (intervalMode === 'range') {
+      const minVal = Number(minDays)
+      const maxVal = Number(maxDays)
+      if (!minDays || minVal < 1 || !maxDays || maxVal < 1) {
+        onShowToast?.('Укажите оба значения диапазона', 'error')
+        return
+      }
+      if (maxVal < minVal) {
+        onShowToast?.('Максимум должен быть больше минимума', 'error')
+        return
+      }
+      if (minVal > 365 || maxVal > 365) {
+        onShowToast?.('Максимальное значение — 365 дней', 'error')
+        return
+      }
+      body.custom_watering_interval_min_days = minVal
+      body.custom_watering_interval_max_days = maxVal
+    } else {
+      body.custom_watering_interval_days = null
+      body.custom_watering_interval_min_days = null
+      body.custom_watering_interval_max_days = null
+    }
+
     setSaving(true)
     try {
-      const res = await api.updateUserPlant(userPlant.id, {
-        nickname: nickname.trim() || null,
-        location: location.trim() || null,
-        custom_watering_interval_days: customInterval ? Number(customInterval) : null,
-        notes: notes.trim() || null,
-      })
+      const res = await api.updateUserPlant(userPlant.id, body)
       onSaved(res.user_plant)
       onShowToast?.('Сохранено')
     } catch (e) {
@@ -109,7 +154,7 @@ export default function PlantSettings({ userPlant, onSaved, onArchived, onBack, 
           </div>
         </div>
 
-        <div className="ps-section-label">Расписание</div>
+        <div className="ps-section-label">Интервал полива</div>
         <div className="ps-card">
           <div className="ps-field">
             <label className="ps-label">Стандартный интервал</label>
@@ -119,18 +164,86 @@ export default function PlantSettings({ userPlant, onSaved, onArchived, onBack, 
                 : 'Не указан'}
             </div>
           </div>
-          <div className="ps-field ps-field-last">
-            <label className="ps-label">Мой интервал (дней)</label>
-            <input
-              className="ps-input"
-              type="number"
-              min="1"
-              max="365"
-              value={customInterval}
-              onChange={(e) => setCustomInterval(e.target.value)}
-              placeholder={plant.watering_interval_days?.toString() || 'Дней'}
-            />
+
+          <div className="ps-field">
+            <label className="ps-label">Мой интервал</label>
+            <div className="ps-mode-chips">
+              <button
+                className={`ps-chip ${intervalMode === 'default' ? 'ps-chip-active' : ''}`}
+                onClick={() => setIntervalMode('default')}
+                type="button"
+              >
+                Как в каталоге
+              </button>
+              <button
+                className={`ps-chip ${intervalMode === 'exact' ? 'ps-chip-active' : ''}`}
+                onClick={() => setIntervalMode('exact')}
+                type="button"
+              >
+                Точно
+              </button>
+              <button
+                className={`ps-chip ${intervalMode === 'range' ? 'ps-chip-active' : ''}`}
+                onClick={() => setIntervalMode('range')}
+                type="button"
+              >
+                Диапазон
+              </button>
+            </div>
           </div>
+
+          {intervalMode === 'exact' && (
+            <div className="ps-field ps-field-last">
+              <label className="ps-label">Каждые N дней</label>
+              <input
+                className="ps-input ps-input-number"
+                type="number"
+                min="1"
+                max="365"
+                value={exactDays}
+                onChange={(e) => setExactDays(e.target.value)}
+                placeholder={plant.watering_interval_days?.toString() || 'Дней'}
+              />
+            </div>
+          )}
+
+          {intervalMode === 'range' && (
+            <div className="ps-field ps-field-last">
+              <label className="ps-label">Диапазон (дней)</label>
+              <div className="ps-range-inputs">
+                <input
+                  className="ps-input ps-input-number ps-range-input"
+                  type="number"
+                  min="1"
+                  max="365"
+                  value={minDays}
+                  onChange={(e) => setMinDays(e.target.value)}
+                  placeholder="от"
+                />
+                <span className="ps-range-sep">–</span>
+                <input
+                  className="ps-input ps-input-number ps-range-input"
+                  type="number"
+                  min="1"
+                  max="365"
+                  value={maxDays}
+                  onChange={(e) => setMaxDays(e.target.value)}
+                  placeholder="до"
+                />
+              </div>
+              <span className="ps-range-hint">
+                PlantPal покажет период, когда растение пора полить
+              </span>
+            </div>
+          )}
+
+          {intervalMode === 'default' && (
+            <div className="ps-field ps-field-last">
+              <span className="ps-range-hint">
+                Будет использоваться стандартный интервал из каталога
+              </span>
+            </div>
+          )}
         </div>
 
         <button

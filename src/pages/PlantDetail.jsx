@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '../utils/api'
 import { isTelegramEnv } from '../utils/telegram'
-import { getWateringStatus, formatDate, formatEventDate, EVENT_LABELS, EVENT_ICONS } from '../utils/status'
+import { getWateringStatus, formatWateringInterval, formatNextWatering, formatDate, formatEventDate, EVENT_LABELS, EVENT_ICONS } from '../utils/status'
 import PlantAvatar from '../components/PlantAvatar'
 import './PlantDetail.css'
 
@@ -94,13 +94,11 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
   const plant = up.plant
   const events = data.care_events || []
   const name = up.nickname || plant.common_name
-  const effectiveInterval = up.custom_watering_interval_days || plant.watering_interval_days
-  const status = getWateringStatus(up.last_watered, effectiveInterval)
+  const status = getWateringStatus(up.next_watering_at, up.next_watering_window_end_at)
+  const intervalInfo = formatWateringInterval(up)
 
   const careInfo = [
-    { icon: '💧', label: 'Полив', value: up.custom_watering_interval_days
-        ? `каждые ${up.custom_watering_interval_days} дн. (свой)`
-        : `каждые ${plant.watering_interval_days} дн.` },
+    { icon: '💧', label: 'Полив', value: intervalInfo.text + (intervalInfo.isCustom ? ' (свой)' : '') },
     plant.light && { icon: '☀️', label: 'Свет', value: plant.light },
     plant.humidity && { icon: '💨', label: 'Влажность', value: plant.humidity },
     plant.temperature && { icon: '🌡', label: 'Температура', value: plant.temperature },
@@ -143,7 +141,7 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
             {up.next_watering_at && (
               <div className="pd-date-item">
                 <span className="pd-date-label">Следующий полив</span>
-                <span className="pd-date-value">{formatDate(up.next_watering_at)}</span>
+                <span className="pd-date-value">{formatNextWatering(up.next_watering_at, up.next_watering_window_end_at)}</span>
               </div>
             )}
             {!up.last_watered && !up.next_watering_at && (

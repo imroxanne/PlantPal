@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
+import { formatNextWatering } from '../utils/status'
 import PlantAvatar from '../components/PlantAvatar'
 import './Tasks.css'
 
@@ -118,7 +119,11 @@ export default function Tasks({ onPlantTap, onShowToast, onTaskCountChange }) {
                         <PlantAvatar name={name} imageUrl={up.plant.image_url} size={40} />
                         <div className="task-card-info">
                           <div className="task-card-name">{name}</div>
-                          <div className="task-card-species">{up.plant.common_name}</div>
+                          <div className="task-card-species">
+                            {up.next_watering_window_end_at
+                              ? formatNextWatering(up.next_watering_at, up.next_watering_window_end_at)
+                              : up.plant.common_name}
+                          </div>
                         </div>
                         <button
                           className="task-card-done"

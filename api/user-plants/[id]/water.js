@@ -1,5 +1,6 @@
 import { requireAuth } from '../../_lib/auth.js'
 import { getSupabase } from '../../_lib/supabase.js'
+import { getEffectiveInterval, calcWateringDates } from '../../_lib/watering.js'
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -14,7 +15,10 @@ export default async function handler(req, res) {
 
     const { data: userPlant, error: fetchErr } = await sb
       .from('user_plants')
-      .select('id, user_id, plant_id, custom_watering_interval_days, plant:plants(watering_interval_days)')
+      .select(`id, user_id, plant_id,
+        custom_watering_interval_days, custom_watering_interval_min_days,
+        custom_watering_interval_max_days,
+        plant:plants(watering_interval_days)`)
       .eq('id', id)
       .eq('is_archived', false)
       .maybeSingle()
@@ -32,10 +36,8 @@ export default async function handler(req, res) {
     }
 
     const now = new Date()
-    const intervalDays = userPlant.custom_watering_interval_days || userPlant.plant?.watering_interval_days
-    const nextWatering = intervalDays
-      ? new Date(now.getTime() + intervalDays * 24 * 60 * 60 * 1000).toISOString()
-      : null
+    const interval = getEffectiveInterval(userPlant)
+    const dates = calcWateringDates(now, interval)
 
     const { error: eventErr } = await sb
       .from('care_events')
@@ -51,7 +53,7 @@ export default async function handler(req, res) {
       .from('user_plants')
       .update({
         last_watered: now.toISOString(),
-        next_watering_at: nextWatering,
+        ...dates,
       })
       .eq('id', id)
 
@@ -60,8 +62,10 @@ export default async function handler(req, res) {
     const { data: updated, error: refetchErr } = await sb
       .from('user_plants')
       .select(`
-        id, user_id, nickname, last_watered, next_watering_at, notes, location,
-        custom_watering_interval_days, photo_url, created_at,
+        id, user_id, nickname, last_watered, next_watering_at, next_watering_window_end_at,
+        notes, location, custom_watering_interval_days,
+        custom_watering_interval_min_days, custom_watering_interval_max_days,
+        photo_url, created_at,
         plant:plants(id, common_name, latin_name, category, description,
           watering_interval_days, light, humidity, temperature, soil,
           fertilizing, toxicity, image_url)

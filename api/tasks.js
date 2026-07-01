@@ -13,7 +13,9 @@ export default async function handler(req, res) {
 
     const { data, error } = await sb
       .from('user_plants')
-      .select('id, nickname, last_watered, next_watering_at, plant:plants(id, common_name, latin_name, watering_interval_days, image_url)')
+      .select(`id, nickname, last_watered, next_watering_at, next_watering_window_end_at,
+        custom_watering_interval_min_days, custom_watering_interval_max_days,
+        plant:plants(id, common_name, latin_name, watering_interval_days, image_url)`)
       .eq('user_id', user.id)
       .eq('is_archived', false)
       .not('next_watering_at', 'is', null)
@@ -29,11 +31,23 @@ export default async function handler(req, res) {
     const groups = { overdue: [], today: [], tomorrow: [], week: [] }
 
     for (const up of data || []) {
+      const windowEnd = up.next_watering_window_end_at
+        ? new Date(up.next_watering_window_end_at)
+        : null
       const next = new Date(up.next_watering_at)
-      if (next < todayStart) groups.overdue.push(up)
-      else if (next < tomorrowStart) groups.today.push(up)
-      else if (next < new Date(tomorrowStart.getTime() + 86400000)) groups.tomorrow.push(up)
-      else if (next < weekEnd) groups.week.push(up)
+
+      if (windowEnd) {
+        if (todayStart > windowEnd) groups.overdue.push(up)
+        else if (todayStart >= next && todayStart <= windowEnd) groups.today.push(up)
+        else if (next < tomorrowStart) groups.today.push(up)
+        else if (next < new Date(tomorrowStart.getTime() + 86400000)) groups.tomorrow.push(up)
+        else if (next < weekEnd) groups.week.push(up)
+      } else {
+        if (next < todayStart) groups.overdue.push(up)
+        else if (next < tomorrowStart) groups.today.push(up)
+        else if (next < new Date(tomorrowStart.getTime() + 86400000)) groups.tomorrow.push(up)
+        else if (next < weekEnd) groups.week.push(up)
+      }
     }
 
     res.json({ tasks: groups })

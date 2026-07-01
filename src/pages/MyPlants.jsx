@@ -42,7 +42,9 @@ export default function MyPlants({ onAdd, onPlantTap, onShowToast, onTaskCountCh
       setUserPlants((prev) =>
         prev.map((p) =>
           p.id === plantId
-            ? { ...p, last_watered: res.user_plant.last_watered, next_watering_at: res.user_plant.next_watering_at }
+            ? { ...p, last_watered: res.user_plant.last_watered,
+                next_watering_at: res.user_plant.next_watering_at,
+                next_watering_window_end_at: res.user_plant.next_watering_window_end_at }
             : p
         )
       )
@@ -93,8 +95,7 @@ export default function MyPlants({ onAdd, onPlantTap, onShowToast, onTaskCountCh
         <div className="plant-list">
           {userPlants.map((up) => {
             const name = up.nickname || up.plant.common_name
-            const effectiveInterval = up.custom_watering_interval_days || up.plant.watering_interval_days
-            const status = getWateringStatus(up.last_watered, effectiveInterval)
+            const status = getWateringStatus(up.next_watering_at, up.next_watering_window_end_at)
             const showWaterBtn = status.key === 'today' || status.key === 'overdue'
             return (
               <div

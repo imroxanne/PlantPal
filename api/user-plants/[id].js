@@ -1,9 +1,12 @@
 import { requireAuth } from '../_lib/auth.js'
 import { getSupabase } from '../_lib/supabase.js'
+import { buildIntervalUpdates } from '../_lib/watering.js'
 
 const PLANT_SELECT = `
-  id, user_id, nickname, last_watered, next_watering_at, notes, location,
-  custom_watering_interval_days, photo_url, created_at,
+  id, user_id, nickname, last_watered, next_watering_at, next_watering_window_end_at,
+  notes, location, custom_watering_interval_days,
+  custom_watering_interval_min_days, custom_watering_interval_max_days,
+  photo_url, created_at,
   plant:plants(id, common_name, latin_name, category, description,
     watering_interval_days, light, humidity, temperature, soil,
     fertilizing, toxicity, image_url)
@@ -50,7 +53,10 @@ export default async function handler(req, res) {
     if (req.method === 'PATCH') {
       const { data: existing, error: fetchErr } = await sb
         .from('user_plants')
-        .select('id, user_id, last_watered, custom_watering_interval_days, plant:plants(watering_interval_days)')
+        .select(`id, user_id, last_watered,
+          custom_watering_interval_days, custom_watering_interval_min_days,
+          custom_watering_interval_max_days,
+          plant:plants(watering_interval_days)`)
         .eq('id', id)
         .eq('is_archived', false)
         .maybeSingle()
@@ -65,29 +71,28 @@ export default async function handler(req, res) {
         return
       }
 
-      const { nickname, location, notes, custom_watering_interval_days } = req.body || {}
+      const body = req.body || {}
       const updates = {}
-      if (nickname !== undefined) updates.nickname = nickname?.trim() || null
-      if (location !== undefined) updates.location = location?.trim() || null
-      if (notes !== undefined) updates.notes = notes?.trim() || null
-      if (custom_watering_interval_days !== undefined) {
-        updates.custom_watering_interval_days =
-          custom_watering_interval_days && Number(custom_watering_interval_days) > 0
-            ? Number(custom_watering_interval_days)
-            : null
+      if (body.nickname !== undefined) updates.nickname = body.nickname?.trim() || null
+      if (body.location !== undefined) updates.location = body.location?.trim() || null
+      if (body.notes !== undefined) updates.notes = body.notes?.trim() || null
+
+      const hasIntervalChange = body.custom_watering_interval_days !== undefined
+        || body.custom_watering_interval_min_days !== undefined
+        || body.custom_watering_interval_max_days !== undefined
+
+      if (hasIntervalChange) {
+        const result = buildIntervalUpdates(body, existing)
+        if (result.error) {
+          res.status(400).json({ error: result.error })
+          return
+        }
+        Object.assign(updates, result.updates)
       }
 
       if (Object.keys(updates).length === 0) {
         res.status(400).json({ error: 'No fields to update' })
         return
-      }
-
-      if (updates.custom_watering_interval_days !== undefined && existing.last_watered) {
-        const newInterval = updates.custom_watering_interval_days || existing.plant?.watering_interval_days
-        if (newInterval) {
-          const lastWatered = new Date(existing.last_watered)
-          updates.next_watering_at = new Date(lastWatered.getTime() + newInterval * 86400000).toISOString()
-        }
       }
 
       const { error: updateErr } = await sb

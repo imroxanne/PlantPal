@@ -1,8 +1,6 @@
 import { requireAuth } from './_lib/auth.js'
 import { getSupabase } from './_lib/supabase.js'
 
-const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/
-
 export default async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'PATCH') {
     res.status(405).json({ error: 'Method not allowed' })
@@ -24,33 +22,20 @@ export default async function handler(req, res) {
 
       res.setHeader('Cache-Control', 'no-store')
       res.json({
-        notification_time: data.notification_time || null,
-        timezone: data.timezone || 'Europe/Moscow',
         reminders_enabled: !!data.notification_time,
       })
       return
     }
 
-    const { reminders_enabled, notification_time, timezone } = req.body || {}
-    const updates = {}
+    const { reminders_enabled } = req.body || {}
 
-    if (reminders_enabled === false) {
-      updates.notification_time = null
-    } else if (notification_time !== undefined) {
-      if (!TIME_RE.test(notification_time)) {
-        res.status(400).json({ error: 'Invalid time format, expected HH:mm' })
-        return
-      }
-      updates.notification_time = notification_time
-    }
-
-    if (timezone !== undefined && typeof timezone === 'string' && timezone.length > 0) {
-      updates.timezone = timezone
-    }
-
-    if (Object.keys(updates).length === 0) {
-      res.status(400).json({ error: 'No valid fields to update' })
+    if (typeof reminders_enabled !== 'boolean') {
+      res.status(400).json({ error: 'reminders_enabled must be a boolean' })
       return
+    }
+
+    const updates = {
+      notification_time: reminders_enabled ? '07:00' : null,
     }
 
     const { error } = await sb
@@ -60,19 +45,7 @@ export default async function handler(req, res) {
 
     if (error) throw new Error(`Database error: ${error.message}`)
 
-    const { data: updated, error: fetchErr } = await sb
-      .from('users')
-      .select('notification_time, timezone')
-      .eq('id', user.id)
-      .single()
-
-    if (fetchErr) throw new Error(`Database error: ${fetchErr.message}`)
-
-    res.json({
-      notification_time: updated.notification_time || null,
-      timezone: updated.timezone || 'Europe/Moscow',
-      reminders_enabled: !!updated.notification_time,
-    })
+    res.json({ reminders_enabled })
   } catch (e) {
     const msg = e.message
     const status = msg === 'Unauthorized' ? 401 : 500

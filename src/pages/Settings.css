@@ -94,40 +94,6 @@
   transform: translateX(20px);
 }
 
-.settings-time-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-light);
-}
-
-.settings-time-label {
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
-.settings-time-input {
-  font-size: 16px;
-  font-weight: 600;
-  font-family: inherit;
-  color: var(--heading);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 8px 12px;
-  width: 100px;
-  text-align: center;
-  -webkit-appearance: none;
-}
-
-.settings-time-input:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
 .settings-hint {
   font-size: 13px;
   color: var(--text-tertiary);

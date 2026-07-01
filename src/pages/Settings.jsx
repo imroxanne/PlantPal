@@ -8,14 +8,10 @@ export default function Settings({ onBack, onShowToast }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [enabled, setEnabled] = useState(false)
-  const [time, setTime] = useState('10:00')
 
   useEffect(() => {
     api.getSettings()
-      .then((data) => {
-        setEnabled(data.reminders_enabled)
-        setTime(data.notification_time || '10:00')
-      })
+      .then((data) => setEnabled(data.reminders_enabled))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
   }, [])
@@ -28,11 +24,7 @@ export default function Settings({ onBack, onShowToast }) {
   const handleSave = async () => {
     setSaving(true)
     try {
-      if (enabled) {
-        await api.updateSettings({ reminders_enabled: true, notification_time: time })
-      } else {
-        await api.updateSettings({ reminders_enabled: false })
-      }
+      await api.updateSettings({ reminders_enabled: enabled })
       hapticSuccess()
       onShowToast?.('Настройки сохранены')
     } catch (e) {
@@ -75,7 +67,7 @@ export default function Settings({ onBack, onShowToast }) {
             <div className="settings-card-title">Напоминания</div>
 
             <div className="settings-row">
-              <span className="settings-row-label">Напоминания о поливе</span>
+              <span className="settings-row-label">Ежедневные напоминания</span>
               <label className="settings-toggle">
                 <input type="checkbox" checked={enabled} onChange={handleToggle} />
                 <span className="settings-toggle-track" />
@@ -83,19 +75,8 @@ export default function Settings({ onBack, onShowToast }) {
               </label>
             </div>
 
-            <div className="settings-time-row">
-              <span className="settings-time-label">Время напоминания</span>
-              <input
-                type="time"
-                className="settings-time-input"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                disabled={!enabled}
-              />
-            </div>
-
             <div className="settings-hint">
-              PlantPal пришлёт сообщение в Telegram раз в день, если есть растения, которые пора полить. Точное время может отличаться от выбранного.
+              PlantPal пришлёт утреннее напоминание в Telegram, если есть растения, которые пора полить.
             </div>
 
             <div className="settings-save-area">

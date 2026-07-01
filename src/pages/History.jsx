@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
 import { EVENT_LABELS, EVENT_ICONS, formatEventDate } from '../utils/status'
+import { hapticSuccess, hapticError, hapticSelection } from '../utils/telegram'
+import ConfirmDialog from '../components/ConfirmDialog'
 import './History.css'
 
 function groupByDate(events) {
@@ -30,22 +32,67 @@ function groupByDate(events) {
   return groups
 }
 
-export default function History({ onPlantTap }) {
+const PERIODS = [
+  { id: 'today', label: 'За сегодня' },
+  { id: '7d', label: 'За 7 дней' },
+  { id: '30d', label: 'За 30 дней' },
+  { id: 'all', label: 'Всю историю' },
+]
+
+export default function History({ onPlantTap, onShowToast }) {
   const [events, setEvents] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [showCleanup, setShowCleanup] = useState(false)
+  const [selectedPeriod, setSelectedPeriod] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true)
+    setError(null)
     api.getCareEvents()
       .then((d) => setEvents(d.care_events))
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false))
-  }, [])
+  }
+
+  useEffect(() => { load() }, [])
+
+  const handleSelectPeriod = (id) => {
+    hapticSelection()
+    setSelectedPeriod(id)
+  }
+
+  const handleDelete = async () => {
+    if (!selectedPeriod) return
+    setDeleting(true)
+    try {
+      await api.deleteCareEvents(selectedPeriod)
+      setShowCleanup(false)
+      setSelectedPeriod(null)
+      hapticSuccess()
+      onShowToast?.('История очищена')
+      load()
+    } catch (e) {
+      hapticError()
+      onShowToast?.('Ошибка: ' + e.message, 'error')
+    } finally {
+      setDeleting(false)
+    }
+  }
 
   return (
     <div className="history-page">
       <div className="history-header">
         <h1>История</h1>
+        {!loading && !error && events?.length > 0 && (
+          <button
+            className="history-cleanup-btn"
+            onClick={() => { setShowCleanup(true); setSelectedPeriod(null) }}
+          >
+            Очистить
+          </button>
+        )}
       </div>
 
       {loading && (
@@ -120,6 +167,36 @@ export default function History({ onPlantTap }) {
               </div>
             </div>
           ))}
+        </div>
+      )}
+      {showCleanup && (
+        <div className="confirm-overlay" onClick={() => setShowCleanup(false)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="confirm-icon">🗑</div>
+            <div className="confirm-title">Очистить историю</div>
+            <div className="confirm-text">Выберите период. Это не повлияет на расписание полива.</div>
+            <div className="history-period-chips">
+              {PERIODS.map((p) => (
+                <button
+                  key={p.id}
+                  className={`history-period-chip ${selectedPeriod === p.id ? 'history-period-chip-active' : ''}`}
+                  onClick={() => handleSelectPeriod(p.id)}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+            <button
+              className="confirm-btn-danger"
+              onClick={handleDelete}
+              disabled={!selectedPeriod || deleting}
+            >
+              {deleting ? 'Удаляю...' : 'Удалить'}
+            </button>
+            <button className="confirm-btn-cancel" onClick={() => setShowCleanup(false)}>
+              Отмена
+            </button>
+          </div>
         </div>
       )}
     </div>

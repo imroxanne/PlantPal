@@ -54,6 +54,7 @@ export default function Tasks({ onPlantTap, onShowToast, onTaskCountChange }) {
         return next
       })
       onTaskCountChange?.()
+      api.getTasks().then((d) => setTasks(d.tasks)).catch(() => {})
       hapticSuccess()
       onShowToast?.('Полив отмечен!')
     } catch (err) {

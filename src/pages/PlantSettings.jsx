@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { api } from '../utils/api'
-import { isTelegramEnv } from '../utils/telegram'
+import { isTelegramEnv, hapticSuccess, hapticError, getTelegramWebApp } from '../utils/telegram'
 import ConfirmDialog from '../components/ConfirmDialog'
 import './PlantSettings.css'
 
@@ -12,6 +12,7 @@ export default function PlantSettings({ userPlant, onSaved, onArchived, onBack, 
   const [saving, setSaving] = useState(false)
   const [showArchiveDialog, setShowArchiveDialog] = useState(false)
   const [archiving, setArchiving] = useState(false)
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false)
 
   const hasRange = !!(userPlant.custom_watering_interval_min_days && userPlant.custom_watering_interval_max_days)
   const hasExact = !!(userPlant.custom_watering_interval_days && !hasRange)
@@ -27,6 +28,40 @@ export default function PlantSettings({ userPlant, onSaved, onArchived, onBack, 
   const [maxDays, setMaxDays] = useState(
     hasRange ? userPlant.custom_watering_interval_max_days.toString() : ''
   )
+
+  const initialNickname = userPlant.nickname || ''
+  const initialLocation = userPlant.location || ''
+  const initialNotes = userPlant.notes || ''
+  const initialExactDays = hasExact ? userPlant.custom_watering_interval_days.toString() : ''
+  const initialMinDays = hasRange ? userPlant.custom_watering_interval_min_days.toString() : ''
+  const initialMaxDays = hasRange ? userPlant.custom_watering_interval_max_days.toString() : ''
+
+  const isDirty = useMemo(() => {
+    if (nickname !== initialNickname) return true
+    if (location !== initialLocation) return true
+    if (notes !== initialNotes) return true
+    if (intervalMode !== initialMode) return true
+    if (intervalMode === 'exact' && exactDays !== initialExactDays) return true
+    if (intervalMode === 'range' && (minDays !== initialMinDays || maxDays !== initialMaxDays)) return true
+    return false
+  }, [nickname, location, notes, intervalMode, exactDays, minDays, maxDays,
+      initialNickname, initialLocation, initialNotes, initialMode, initialExactDays, initialMinDays, initialMaxDays])
+
+  const handleBack = useCallback(() => {
+    if (isDirty) {
+      setShowDiscardDialog(true)
+    } else {
+      onBack()
+    }
+  }, [isDirty, onBack])
+
+  useEffect(() => {
+    const tg = getTelegramWebApp()
+    if (!tg) return
+
+    tg.BackButton.onClick(handleBack)
+    return () => tg.BackButton.offClick(handleBack)
+  }, [handleBack])
 
   const displayName = userPlant.nickname || plant.common_name
 
@@ -73,8 +108,10 @@ export default function PlantSettings({ userPlant, onSaved, onArchived, onBack, 
     try {
       const res = await api.updateUserPlant(userPlant.id, body)
       onSaved(res.user_plant)
+      hapticSuccess()
       onShowToast?.('Сохранено')
     } catch (e) {
+      hapticError()
       onShowToast?.('Ошибка: ' + e.message, 'error')
     } finally {
       setSaving(false)
@@ -99,7 +136,7 @@ export default function PlantSettings({ userPlant, onSaved, onArchived, onBack, 
     <div className="plant-settings">
       <div className="ps-header">
         {!isTelegramEnv() && onBack && (
-          <button className="header-back-btn" onClick={onBack}>←</button>
+          <button className="header-back-btn" onClick={handleBack}>←</button>
         )}
         <h1>Параметры</h1>
       </div>
@@ -254,12 +291,18 @@ export default function PlantSettings({ userPlant, onSaved, onArchived, onBack, 
           {saving ? 'Сохраняю...' : 'Сохранить'}
         </button>
 
-        <button
-          className="ps-archive-btn"
-          onClick={() => setShowArchiveDialog(true)}
-        >
-          Архивировать растение
-        </button>
+        <div className="ps-section-label">Опасная зона</div>
+        <div className="ps-danger-zone">
+          <p className="ps-danger-text">
+            Растение исчезнет из активной коллекции, но история останется.
+          </p>
+          <button
+            className="ps-archive-btn"
+            onClick={() => setShowArchiveDialog(true)}
+          >
+            Архивировать растение
+          </button>
+        </div>
       </div>
 
       {showArchiveDialog && (
@@ -270,6 +313,17 @@ export default function PlantSettings({ userPlant, onSaved, onArchived, onBack, 
           confirmLabel={archiving ? 'Архивирую...' : 'Архивировать'}
           onConfirm={handleArchive}
           onCancel={() => setShowArchiveDialog(false)}
+        />
+      )}
+
+      {showDiscardDialog && (
+        <ConfirmDialog
+          icon="⚠️"
+          title="Есть несохранённые изменения"
+          text="Выйти без сохранения?"
+          confirmLabel="Выйти"
+          onConfirm={onBack}
+          onCancel={() => setShowDiscardDialog(false)}
         />
       )}
     </div>

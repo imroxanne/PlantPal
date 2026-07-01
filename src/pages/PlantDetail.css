@@ -430,6 +430,26 @@
   border-radius: 50%;
 }
 
+.pd-history-all {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+  padding: 14px 16px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: center;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pd-history-all:active {
+  opacity: 0.7;
+}
+
 /* Error state reuse */
 
 .plant-detail .error-state {

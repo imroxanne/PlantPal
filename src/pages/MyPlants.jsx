@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../utils/api'
 import { getWateringStatus } from '../utils/status'
+import { hapticSuccess, hapticError } from '../utils/telegram'
 import PlantAvatar from '../components/PlantAvatar'
 import './MyPlants.css'
 
@@ -49,8 +50,10 @@ export default function MyPlants({ onAdd, onPlantTap, onShowToast, onTaskCountCh
         )
       )
       onTaskCountChange?.()
+      hapticSuccess()
       onShowToast?.('Полив отмечен!')
     } catch (err) {
+      hapticError()
       onShowToast?.('Ошибка: ' + err.message, 'error')
     } finally {
       setWateringId(null)

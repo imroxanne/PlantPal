@@ -30,6 +30,9 @@
 - Ежедневные Telegram-напоминания о поливе (Vercel Cron + Bot API)
 - Настройки уведомлений (включение/выключение)
 - Загрузка пользовательского фото растения (одно фото, JPEG/PNG/WebP, до 3 МБ)
+- Расписание подкормки и пересадки (включение/выключение, интервал 1–730 дней)
+- Задачи по всем типам ухода (полив, подкормка, пересадка) с иконками
+- Напоминания обо всех типах ухода в ежедневных сообщениях
 
 > **Vercel Hobby plan:** cron запускается раз в день утром (ограничение Hobby).
 > Выбор точного времени — Post-MVP (требует Vercel Pro или внешний scheduler).
@@ -120,7 +123,7 @@ npm run dev
    - `SUPABASE_URL` — URL проекта Supabase
    - `SUPABASE_SERVICE_ROLE_KEY` — сервисный ключ Supabase
    - `CRON_SECRET` — секрет для авторизации cron-endpoint
-3. Выполни SQL из `supabase/stage_f_notifications.sql` и `supabase/stage_g_plant_photos.sql` в Supabase
+3. Выполни SQL из `supabase/stage_f_notifications.sql`, `supabase/stage_g_plant_photos.sql` и `supabase/stage_h_care_schedule.sql` в Supabase
 4. Деплой произойдёт автоматически
 
 ### Supabase Storage
@@ -152,3 +155,4 @@ npm run dev
 - [x] Настройки пользователя + уведомления через бота
 - [x] Hotfix: flat API routing (api/user-plant.js)
 - [x] Загрузка фото растений (Supabase Storage)
+- [x] Расписание подкормки и пересадки (Care Schedule Expansion)

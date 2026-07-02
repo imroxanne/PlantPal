@@ -37,22 +37,37 @@ function formatReminderDate(iso) {
   return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })
 }
 
+const TASK_LABELS = {
+  watering: 'полив',
+  fertilizing: 'подкормка',
+  repotting: 'пересадка',
+}
+
 function buildMessage(tasks) {
   const items = []
 
   for (const up of tasks.overdue) {
     const name = up.nickname || up.plant.common_name
-    const endDate = up.next_watering_window_end_at || up.next_watering_at
+    const label = TASK_LABELS[up.taskType] || 'полив'
+    let endDate
+    if (up.taskType === 'watering') {
+      endDate = up.next_watering_window_end_at || up.next_watering_at
+    } else if (up.taskType === 'fertilizing') {
+      endDate = up.next_fertilizing_at
+    } else {
+      endDate = up.next_repotting_at
+    }
     const overdueDays = Math.max(1, Math.round((Date.now() - new Date(endDate).getTime()) / DAY_MS))
-    items.push(`• ${name} — просрочено на ${overdueDays} дн.`)
+    items.push(`• ${name} — ${label}, просрочено на ${overdueDays} дн.`)
   }
 
   for (const up of tasks.today) {
     const name = up.nickname || up.plant.common_name
-    if (up.next_watering_window_end_at) {
+    const label = TASK_LABELS[up.taskType] || 'полив'
+    if (up.taskType === 'watering' && up.next_watering_window_end_at) {
       items.push(`• ${name} — полить до ${formatReminderDate(up.next_watering_window_end_at)}`)
     } else {
-      items.push(`• ${name} — полив`)
+      items.push(`• ${name} — ${label}`)
     }
   }
 
@@ -61,10 +76,10 @@ function buildMessage(tasks) {
   const MAX_ITEMS = 7
   let lines = items.slice(0, MAX_ITEMS)
   if (items.length > MAX_ITEMS) {
-    lines.push(`\nИ ещё ${items.length - MAX_ITEMS} растений.`)
+    lines.push(`\nИ ещё ${items.length - MAX_ITEMS} задач.`)
   }
 
-  return `🌿 <b>PlantPal</b>\n\nСегодня нужно полить:\n${lines.join('\n')}\n\nОткрой PlantPal, чтобы отметить уход.`
+  return `🌿 <b>PlantPal</b>\n\nСегодня нужен уход:\n${lines.join('\n')}\n\nОткрой PlantPal, чтобы отметить уход.`
 }
 
 export default async function handler(req, res) {

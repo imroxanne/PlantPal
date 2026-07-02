@@ -52,7 +52,7 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
     try {
       const d = await api.createEvent(userPlantId, type)
       setData(d)
-      if (type === 'watering') onTaskCountChange?.()
+      if (type === 'watering' || type === 'fertilizing' || type === 'repotting') onTaskCountChange?.()
       hapticSuccess()
       const labels = { watering: 'Полив отмечен!', fertilizing: 'Подкормка отмечена!', repotting: 'Пересадка отмечена!', check: 'Проверка отмечена!' }
       onShowToast?.(labels[type] || 'Отмечено!')
@@ -234,6 +234,22 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
               </div>
             )}
           </div>
+          {(up.next_fertilizing_at || up.next_repotting_at) && (
+            <div className="pd-status-dates pd-status-dates-extra">
+              {up.next_fertilizing_at && (
+                <div className="pd-date-item">
+                  <span className="pd-date-label">Подкормка</span>
+                  <span className="pd-date-value">{formatDate(up.next_fertilizing_at)}</span>
+                </div>
+              )}
+              {up.next_repotting_at && (
+                <div className="pd-date-item">
+                  <span className="pd-date-label">Пересадка</span>
+                  <span className="pd-date-value">{formatDate(up.next_repotting_at)}</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="pd-quick-actions">

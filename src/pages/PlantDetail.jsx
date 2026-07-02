@@ -17,6 +17,7 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
   const [showNoteInput, setShowNoteInput] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [showDeletePhoto, setShowDeletePhoto] = useState(false)
+  const [showOnboardingHint, setShowOnboardingHint] = useState(false)
   const fileInputRef = useRef(null)
   const moreMenuRef = useRef(null)
 
@@ -154,6 +155,12 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
   const up = data.user_plant
   const plant = up.plant
   const events = data.care_events || []
+
+  useEffect(() => {
+    if (events.length === 0 && !localStorage.getItem('plantpal_seen_first_plant_hint')) {
+      setShowOnboardingHint(true)
+    }
+  }, [events.length])
   const name = up.nickname || plant.common_name
   const status = getWateringStatus(up.next_watering_at, up.next_watering_window_end_at)
   const intervalInfo = formatWateringInterval(up)
@@ -324,6 +331,23 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
                 Отмена
               </button>
             </div>
+          </div>
+        )}
+
+        {showOnboardingHint && (
+          <div className="pd-onboarding-hint">
+            <div className="pd-onboarding-hint-text">
+              Растение добавлено! Отмечайте полив кнопкой «Полил» — PlantPal рассчитает следующую дату и напомнит вовремя.
+            </div>
+            <button
+              className="pd-onboarding-hint-close"
+              onClick={() => {
+                setShowOnboardingHint(false)
+                localStorage.setItem('plantpal_seen_first_plant_hint', '1')
+              }}
+            >
+              Понятно
+            </button>
           </div>
         )}
 

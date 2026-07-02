@@ -536,3 +536,36 @@
 .plant-detail .error-state .btn-primary {
   max-width: 240px;
 }
+
+/* Onboarding hint */
+
+.pd-onboarding-hint {
+  background: var(--primary-light);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-top: 16px;
+  animation: fadeUp 300ms ease-out;
+}
+
+.pd-onboarding-hint-text {
+  font-size: 14px;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+
+.pd-onboarding-hint-close {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--primary);
+  cursor: pointer;
+  padding: 0;
+  margin-top: 10px;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pd-onboarding-hint-close:active {
+  opacity: 0.7;
+}

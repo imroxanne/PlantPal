@@ -98,11 +98,16 @@ export default function MyPlants({ onAdd, onPlantTap, onShowToast, onTaskCountCh
       {!loading && !error && count === 0 && (
         <div className="empty-state">
           <div className="empty-state-icon">🌱</div>
-          <h2>Добавьте первое растение</h2>
-          <p>PlantPal поможет не забыть о поливе и уходе за вашими зелёными друзьями</p>
+          <h2>Начните с первого растения</h2>
+          <ul className="empty-state-features">
+            <li>Напоминания о поливе и подкормке</li>
+            <li>Дневник ухода и фотографии</li>
+            <li>Подсказки по условиям содержания</li>
+          </ul>
           <button className="btn-primary" onClick={onAdd}>
             Добавить растение
           </button>
+          <p className="empty-state-hint">Выберите растение из каталога — PlantPal составит расписание</p>
         </div>
       )}
 

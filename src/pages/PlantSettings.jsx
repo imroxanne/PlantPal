@@ -322,6 +322,7 @@ export default function PlantSettings({ userPlant, onSaved, onArchived, onBack, 
         </div>
 
         <div className="ps-section-label">Дополнительный уход</div>
+        <div className="ps-section-hint">Включите, чтобы PlantPal напоминал о подкормке и пересадке</div>
         <div className="ps-card">
           <div className="ps-field">
             <div className="ps-toggle-row">

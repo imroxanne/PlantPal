@@ -35,6 +35,13 @@
   margin-top: 0;
 }
 
+.ps-section-hint {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  line-height: 1.4;
+  margin-bottom: 10px;
+}
+
 .ps-card {
   background: var(--bg-card);
   border-radius: var(--radius-md);

@@ -96,7 +96,7 @@ export default function Tasks({ onPlantTap, onShowToast, onTaskCountChange }) {
         <div className="tasks-empty">
           <div className="tasks-empty-icon">🌿</div>
           <h2>Всё в порядке</h2>
-          <p>Сегодня ничего делать не нужно</p>
+          <p>Здесь появятся задачи, когда подойдёт время полива, подкормки или пересадки ваших растений</p>
         </div>
       )}
 

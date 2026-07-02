@@ -130,7 +130,7 @@ export default function History({ onPlantTap, onShowToast, userPlantId, plantNam
         <div className="history-empty">
           <div className="history-empty-icon">📋</div>
           <h2>Пока нет записей</h2>
-          <p>Здесь появится история ухода за растениями</p>
+          <p>Когда вы отметите полив, подкормку или другое действие — оно появится здесь</p>
         </div>
       )}
 

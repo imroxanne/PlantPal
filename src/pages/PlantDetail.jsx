@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { api } from '../utils/api'
 import { isTelegramEnv, hapticSuccess, hapticError } from '../utils/telegram'
 import { getWateringStatus, formatWateringInterval, formatNextWatering, formatDate, formatEventDate, EVENT_LABELS, EVENT_ICONS } from '../utils/status'
+import { getPlantInsights } from '../utils/insights'
 import PlantAvatar from '../components/PlantAvatar'
 import ConfirmDialog from '../components/ConfirmDialog'
 import './PlantDetail.css'
@@ -325,6 +326,24 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
             </div>
           </div>
         )}
+
+        {(() => {
+          const insights = getPlantInsights(up, events)
+          if (insights.length === 0) return null
+          return (
+            <div className="pd-insights-section">
+              <div className="pd-section-title">Подсказки</div>
+              <div className="pd-insights-list">
+                {insights.map((insight, i) => (
+                  <div key={i} className={`pd-insight pd-insight-${insight.priority}`}>
+                    <span className="pd-insight-icon">{insight.icon}</span>
+                    <span className="pd-insight-text">{insight.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })()}
 
         {careInfo.length > 0 && (
           <div className="pd-care-section">

@@ -43,6 +43,14 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
 
   useEffect(() => { load() }, [load])
 
+  useEffect(() => {
+    if (!data) return
+    const events = data.care_events || []
+    if (events.length === 0 && !localStorage.getItem('plantpal_seen_first_plant_hint')) {
+      setShowOnboardingHint(true)
+    }
+  }, [data])
+
   const handleAction = async (type) => {
     if (type === 'note') {
       setShowNoteInput(true)
@@ -155,12 +163,6 @@ export default function PlantDetail({ userPlantId, onBack, onSettings, onShowToa
   const up = data.user_plant
   const plant = up.plant
   const events = data.care_events || []
-
-  useEffect(() => {
-    if (events.length === 0 && !localStorage.getItem('plantpal_seen_first_plant_hint')) {
-      setShowOnboardingHint(true)
-    }
-  }, [events.length])
   const name = up.nickname || plant.common_name
   const status = getWateringStatus(up.next_watering_at, up.next_watering_window_end_at)
   const intervalInfo = formatWateringInterval(up)
